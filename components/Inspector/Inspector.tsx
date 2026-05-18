@@ -7,6 +7,7 @@ import type { ChallengeResponse, StationStateResponse, TeamResponse } from "@/ty
 
 export function Inspector({
   challenge,
+  hideHeader = false,
   isMutating,
   onAddStationChips,
   onCompleteChallenge,
@@ -17,6 +18,7 @@ export function Inspector({
   teamsById,
 }: {
   challenge: ChallengeResponse | null;
+  hideHeader?: boolean;
   isMutating: boolean;
   onAddStationChips: (stationId: string, body: { chips: number; teamId: string }) => Promise<void>;
   onCompleteChallenge: (challengeId: string, body: { teamId: string }) => Promise<void>;
@@ -30,6 +32,7 @@ export function Inspector({
     return (
       <StationInspector
         isMutating={isMutating}
+        hideHeader={hideHeader}
         onAddStationChips={onAddStationChips}
         selectedTeamId={selectedTeamId}
         station={station}
@@ -42,6 +45,7 @@ export function Inspector({
     return (
       <ChallengeInspector
         challenge={challenge}
+        hideHeader={hideHeader}
         isMutating={isMutating}
         onCompleteChallenge={onCompleteChallenge}
         onFailChallenge={onFailChallenge}

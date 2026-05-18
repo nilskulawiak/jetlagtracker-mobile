@@ -260,6 +260,26 @@ export const styles = StyleSheet.create({
     overflow: "hidden",
     padding: 16,
   },
+  mapFloatingButton: {
+    alignItems: "center",
+    backgroundColor: colors.panel,
+    borderColor: colors.lineStrong,
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 6,
+    left: 10,
+    minHeight: 38,
+    paddingHorizontal: 10,
+    position: "absolute",
+    top: 10,
+    zIndex: 8,
+  },
+  mapFloatingButtonText: {
+    color: colors.ink,
+    fontSize: 12,
+    fontWeight: "900",
+  },
   mapInspectorContent: {
     gap: 10,
     paddingBottom: 4,
@@ -285,10 +305,23 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     overflow: "hidden",
   },
+  mapLegendOverlay: {
+    backgroundColor: colors.panel,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    left: 10,
+    maxWidth: "92%",
+    padding: 8,
+    position: "absolute",
+    top: 56,
+    zIndex: 8,
+  },
   mapMainPane: {
     flex: 1,
     gap: 12,
     minHeight: 0,
+    position: "relative",
   },
   mapTransformLayer: {
     alignSelf: "center",
@@ -309,11 +342,13 @@ export const styles = StyleSheet.create({
   mapViewportSlot: {
     flex: 1,
     minHeight: 0,
+    position: "relative",
   },
   mapWorkspace: {
     flex: 1,
     gap: 12,
     minHeight: 0,
+    position: "relative",
   },
   mapWorkspaceWide: {
     flexDirection: "row",
@@ -388,6 +423,78 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
     padding: 14,
+  },
+  mobileHeader: {
+    padding: 10,
+    paddingTop: 6,
+  },
+  mobileIconButton: {
+    height: 36,
+    width: 36,
+  },
+  mobileInspectorGrip: {
+    alignSelf: "center",
+    backgroundColor: colors.lineStrong,
+    borderRadius: 2,
+    height: 4,
+    marginBottom: 8,
+    width: 40,
+  },
+  mobileInspectorHandle: {
+    paddingHorizontal: 14,
+    paddingTop: 8,
+  },
+  mobileInspectorHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10,
+    paddingBottom: 8,
+  },
+  mobileInspectorSheet: {
+    backgroundColor: colors.panel,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    bottom: 8,
+    left: 8,
+    overflow: "hidden",
+    position: "absolute",
+    right: 8,
+    zIndex: 10,
+  },
+  mobileInspectorSheetCollapsed: {
+    maxHeight: 148,
+  },
+  mobileInspectorSheetExpanded: {
+    maxHeight: 390,
+  },
+  mobileInspectorSubtitle: {
+    color: colors.textSoft,
+    fontSize: 12,
+    fontWeight: "800",
+    marginTop: 2,
+  },
+  mobileInspectorTitle: {
+    color: colors.ink,
+    fontSize: 18,
+    fontWeight: "900",
+  },
+  mobileMapContent: {
+    padding: 8,
+  },
+  mobileMapMainPane: {
+    gap: 0,
+  },
+  mobileMapWorkspace: {
+    gap: 0,
+  },
+  mobileTabBar: {
+    borderTopColor: colors.line,
+    borderTopWidth: 1,
+    padding: 8,
+  },
+  mobileTitle: {
+    fontSize: 20,
   },
   panel: {
     backgroundColor: colors.panel,

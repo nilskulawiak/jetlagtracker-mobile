@@ -8,12 +8,14 @@ import { getChallengeStatusColor, isChallengeDone } from "@/utils/colors";
 
 export function ChallengeInspector({
   challenge,
+  hideHeader = false,
   isMutating,
   onCompleteChallenge,
   onFailChallenge,
   selectedTeamId,
 }: {
   challenge: ChallengeResponse;
+  hideHeader?: boolean;
   isMutating: boolean;
   onCompleteChallenge: (challengeId: string, body: { teamId: string }) => Promise<void>;
   onFailChallenge: (challengeId: string, body: { teamId: string }) => Promise<void>;
@@ -24,12 +26,14 @@ export function ChallengeInspector({
 
   return (
     <View style={styles.panel}>
-      <View style={styles.panelHeader}>
-        <Text style={styles.panelTitle}>{challenge.name}</Text>
-        <Text style={[styles.challengeStatus, { color: getChallengeStatusColor(challenge.status) }]}>
-          {challenge.status}
-        </Text>
-      </View>
+      {hideHeader ? null : (
+        <View style={styles.panelHeader}>
+          <Text style={styles.panelTitle}>{challenge.name}</Text>
+          <Text style={[styles.challengeStatus, { color: getChallengeStatusColor(challenge.status) }]}>
+            {challenge.status}
+          </Text>
+        </View>
+      )}
       <Text style={styles.description}>{challenge.description}</Text>
 
       <View style={styles.statGrid}>

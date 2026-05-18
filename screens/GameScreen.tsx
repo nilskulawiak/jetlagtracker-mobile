@@ -10,6 +10,7 @@ import {
   ScrollView,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -45,6 +46,8 @@ export function GameScreen({
   initialGameId?: string;
   onBackToMenu?: () => void;
 }) {
+  const { width } = useWindowDimensions();
+  const isMobileLayout = width < 700;
   const [selectedTab, setSelectedTab] = useState<Tab>("map");
   const [selectedStationId, setSelectedStationId] = useState<string | null>(null);
   const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null);
@@ -92,6 +95,19 @@ export function GameScreen({
     setSelectedStationId(null);
   };
 
+  const clearMapSelection = () => {
+    setSelectedChallengeId(null);
+    setSelectedStationId(null);
+  };
+
+  const tabs = (
+    <View style={[styles.tabBar, isMobileLayout && styles.mobileTabBar]}>
+      <TabButton active={selectedTab === "map"} icon="map" label="Map" onPress={() => setSelectedTab("map")} />
+      <TabButton active={selectedTab === "teams"} icon="groups" label="Teams" onPress={() => setSelectedTab("teams")} />
+      <TabButton active={selectedTab === "log"} icon="history" label="Log" onPress={() => setSelectedTab("log")} />
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
@@ -99,21 +115,21 @@ export function GameScreen({
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.keyboardAvoidingView}
       >
-        <View style={styles.header}>
+        <View style={[styles.header, isMobileLayout && styles.mobileHeader]}>
           <View style={styles.headerTop}>
             {onBackToMenu ? (
               <Pressable
                 accessibilityLabel="Back to menu"
                 accessibilityRole="button"
                 onPress={onBackToMenu}
-                style={[styles.iconButton, styles.headerBackButton]}
+                style={[styles.iconButton, isMobileLayout && styles.mobileIconButton, styles.headerBackButton]}
               >
-                <MaterialIcons color={colors.ink} name="arrow-back" size={22} />
+                <MaterialIcons color={colors.ink} name="arrow-back" size={isMobileLayout ? 20 : 22} />
               </Pressable>
             ) : null}
             <View style={styles.titleBlock}>
-              <Text style={styles.kicker}>Jet Lag tracker</Text>
-              <Text numberOfLines={1} style={styles.title}>
+              {isMobileLayout ? null : <Text style={styles.kicker}>Jet Lag tracker</Text>}
+              <Text numberOfLines={1} style={[styles.title, isMobileLayout && styles.mobileTitle]}>
                 {gameState?.game.name ?? "Taiwan"}
               </Text>
             </View>
@@ -123,12 +139,17 @@ export function GameScreen({
                 accessibilityRole="button"
                 accessibilityState={{ expanded: showGameDetails }}
                 onPress={() => setShowGameDetails((value) => !value)}
-                style={[styles.iconButton, showGameDetails && styles.iconButtonActive]}
+                style={[styles.iconButton, isMobileLayout && styles.mobileIconButton, showGameDetails && styles.iconButtonActive]}
               >
-                <MaterialIcons color={showGameDetails ? colors.panel : colors.ink} name="tune" size={22} />
+                <MaterialIcons color={showGameDetails ? colors.panel : colors.ink} name="tune" size={isMobileLayout ? 20 : 22} />
               </Pressable>
-              <Pressable accessibilityLabel="Refresh game" accessibilityRole="button" onPress={reload} style={styles.iconButton}>
-                <MaterialIcons color={colors.ink} name="refresh" size={22} />
+              <Pressable
+                accessibilityLabel="Refresh game"
+                accessibilityRole="button"
+                onPress={reload}
+                style={[styles.iconButton, isMobileLayout && styles.mobileIconButton]}
+              >
+                <MaterialIcons color={colors.ink} name="refresh" size={isMobileLayout ? 20 : 22} />
               </Pressable>
             </View>
           </View>
@@ -167,11 +188,7 @@ export function GameScreen({
           ) : null}
         </View>
 
-        <View style={styles.tabBar}>
-          <TabButton active={selectedTab === "map"} icon="map" label="Map" onPress={() => setSelectedTab("map")} />
-          <TabButton active={selectedTab === "teams"} icon="groups" label="Teams" onPress={() => setSelectedTab("teams")} />
-          <TabButton active={selectedTab === "log"} icon="history" label="Log" onPress={() => setSelectedTab("log")} />
-        </View>
+        {isMobileLayout ? null : tabs}
 
         {isLoading && !gameState ? (
           <View style={styles.centerState}>
@@ -184,7 +201,7 @@ export function GameScreen({
             <Text style={styles.errorText}>{error}</Text>
           </View>
         ) : selectedTab === "map" && gameState ? (
-          <View style={styles.mapContent}>
+          <View style={[styles.mapContent, isMobileLayout && styles.mobileMapContent]}>
             {error ? <Text style={styles.inlineError}>{error}</Text> : null}
             <MapScreen
               challenges={challenges}
@@ -199,6 +216,7 @@ export function GameScreen({
               onFailChallenge={(challengeId, body) =>
                 runMutation(() => failChallenge(gameId.trim(), challengeId, body))
               }
+              onClearSelection={clearMapSelection}
               onHoverChange={() => undefined}
               onSelectChallenge={selectChallenge}
               onSelectStation={selectStation}
@@ -245,6 +263,7 @@ export function GameScreen({
             {selectedTab === "log" ? <ActionLog actions={actions} /> : null}
           </ScrollView>
         )}
+        {isMobileLayout ? tabs : null}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

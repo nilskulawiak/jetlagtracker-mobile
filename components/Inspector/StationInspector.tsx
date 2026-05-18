@@ -8,12 +8,14 @@ import type { StationStateResponse, TeamResponse } from "@/types/game";
 import { colors } from "@/utils/colors";
 
 export function StationInspector({
+  hideHeader = false,
   isMutating,
   onAddStationChips,
   selectedTeamId,
   station,
   teamsById,
 }: {
+  hideHeader?: boolean;
   isMutating: boolean;
   onAddStationChips: (stationId: string, body: { chips: number; teamId: string }) => Promise<void>;
   selectedTeamId: string;
@@ -26,13 +28,15 @@ export function StationInspector({
 
   return (
     <View style={styles.panel}>
-      <View style={styles.panelHeader}>
-        <Text style={styles.panelTitle}>{station.name}</Text>
-        <View style={styles.stationOwnerBadge}>
-          <View style={[styles.legendDot, { backgroundColor: owner?.color ?? colors.stationEmpty }]} />
-          <Text style={styles.stationOwnerText}>{owner?.name ?? "Unclaimed"}</Text>
+      {hideHeader ? null : (
+        <View style={styles.panelHeader}>
+          <Text style={styles.panelTitle}>{station.name}</Text>
+          <View style={styles.stationOwnerBadge}>
+            <View style={[styles.legendDot, { backgroundColor: owner?.color ?? colors.stationEmpty }]} />
+            <Text style={styles.stationOwnerText}>{owner?.name ?? "Unclaimed"}</Text>
+          </View>
         </View>
-      </View>
+      )}
 
       <View style={styles.chipBreakdown}>
         {teams.map((team) => {
