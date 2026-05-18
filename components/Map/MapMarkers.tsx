@@ -12,6 +12,7 @@ export function ChallengeMarkers({
   renderedMapHeight,
   renderedMapWidth,
   selectedChallengeId,
+  showCreatedChallenges = false,
 }: {
   challenges: ChallengeResponse[];
   mapHeight: number;
@@ -19,8 +20,9 @@ export function ChallengeMarkers({
   renderedMapHeight: number;
   renderedMapWidth: number;
   selectedChallengeId: string | null;
+  showCreatedChallenges?: boolean;
 }) {
-  return challenges.filter((challenge) => isChallengeVisible(challenge.status)).map((challenge) => (
+  return challenges.filter((challenge) => showCreatedChallenges || isChallengeVisible(challenge.status)).map((challenge) => (
     <View
       accessibilityLabel={`${challenge.name}, ${challenge.rewardChips} chips`}
       key={challenge.id}

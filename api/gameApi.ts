@@ -2,10 +2,14 @@ import Constants from "expo-constants";
 
 import type {
   CreateGameFromPresetRequest,
+  CreateChallengeRequest,
+  CreateStationRequest,
+  CreateTeamRequest,
   GameResponse,
   GamesResponse,
   GameState,
   PresetSummaryResponse,
+  StartGameRequest,
 } from "@/types/game";
 
 export const DEFAULT_GAME_ID = "1f0e193e-7543-49ee-bdad-6925925f2813";
@@ -55,6 +59,34 @@ export function getPresets() {
 
 export function createGameFromPreset(body: CreateGameFromPresetRequest) {
   return request<GameResponse>("/games/from-preset", {
+    body: JSON.stringify(body),
+    method: "POST",
+  });
+}
+
+export function startGame(gameId: string, body: StartGameRequest) {
+  return request<GameResponse>(`/games/${gameId}/start`, {
+    body: JSON.stringify(body),
+    method: "POST",
+  });
+}
+
+export function createTeam(gameId: string, body: CreateTeamRequest) {
+  return request<void>(`/games/${gameId}/teams`, {
+    body: JSON.stringify(body),
+    method: "POST",
+  });
+}
+
+export function createStation(gameId: string, body: CreateStationRequest) {
+  return request<void>(`/games/${gameId}/stations`, {
+    body: JSON.stringify(body),
+    method: "POST",
+  });
+}
+
+export function createChallenge(gameId: string, body: CreateChallengeRequest) {
+  return request<void>(`/games/${gameId}/challenges`, {
     body: JSON.stringify(body),
     method: "POST",
   });

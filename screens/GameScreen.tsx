@@ -18,7 +18,11 @@ import {
   addStationChips,
   API_BASE_URL,
   completeChallenge,
+  createChallenge,
+  createStation,
+  createTeam,
   failChallenge,
+  startGame,
 } from "@/api/gameApi";
 import { ActionLog } from "@/components/ActionLog/ActionLog";
 import { TeamSelector } from "@/components/Inspector/TeamSelector";
@@ -26,6 +30,7 @@ import { MapScreen } from "@/components/Map/MapScreen";
 import { Pill } from "@/components/Shared/Pill";
 import { styles } from "@/components/Shared/styles";
 import { TabButton } from "@/components/Shared/TabButton";
+import { GameSetupPanel } from "@/components/Setup/GameSetupPanel";
 import { TeamsScreen } from "@/components/Teams/TeamsScreen";
 import { useGameState } from "@/hooks/useGameState";
 import { colors } from "@/utils/colors";
@@ -63,6 +68,8 @@ export function GameScreen({
   const actions = gameState?.actions ?? [];
   const ownedStationCounts = getOwnedStationCounts(stations);
   const selectedTeam = teams.find((team) => team.id === selectedTeamId) ?? null;
+  const isGameCreated = gameState?.game.status === "CREATED";
+  const createdChallengeCount = challenges.filter((challenge) => challenge.status === "CREATED").length;
 
   useEffect(() => {
     if (teams.length === 0) {
@@ -182,7 +189,7 @@ export function GameScreen({
             <MapScreen
               challenges={challenges}
               gameState={gameState}
-              isMutating={isMutating}
+              isMutating={isMutating || isGameCreated}
               onAddStationChips={(stationId, body) =>
                 runMutation(() => addStationChips(gameId.trim(), stationId, body))
               }
@@ -198,6 +205,28 @@ export function GameScreen({
               selectedChallengeId={selectedChallengeId}
               selectedStationId={selectedStationId}
               selectedTeamId={selectedTeamId}
+              setupPanel={
+                isGameCreated ? (
+                  <GameSetupPanel
+                    challengeCount={createdChallengeCount}
+                    isMutating={isMutating}
+                    onCreateChallenge={(body) =>
+                      runMutation(() => createChallenge(gameId.trim(), body))
+                    }
+                    onCreateStation={(body) =>
+                      runMutation(() => createStation(gameId.trim(), body))
+                    }
+                    onCreateTeam={(body) =>
+                      runMutation(() => createTeam(gameId.trim(), body))
+                    }
+                    onStartGame={(body) =>
+                      runMutation(async () => {
+                        await startGame(gameId.trim(), body);
+                      })
+                    }
+                  />
+                ) : undefined
+              }
               stations={stations}
               teams={teams}
             />

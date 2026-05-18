@@ -24,10 +24,29 @@ export interface CreateTeamRequest {
   startingChips: number | null;
 }
 
+export interface StartGameRequest {
+  numberOfChallenges: number;
+}
+
 export interface CreateGameFromPresetRequest {
   presetId: string;
   name: string;
   teams: CreateTeamRequest[];
+}
+
+export interface CreateStationRequest {
+  name: string;
+  xCoordinate: number;
+  yCoordinate: number;
+}
+
+export interface CreateChallengeRequest {
+  name: string;
+  description: string;
+  rewardChips: number;
+  status: string;
+  xCoordinate: number;
+  yCoordinate: number;
 }
 
 export interface TeamResponse {

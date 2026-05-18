@@ -56,7 +56,7 @@ export function StationInspector({
         <TextInput
           keyboardType="number-pad"
           onChangeText={(value) => setChips(Math.max(1, Number(value) || 1))}
-          style={styles.chipInput}
+          style={[styles.chipInput, styles.stepperNumberInput]}
           value={String(chips)}
         />
         <Pressable disabled={isMutating} onPress={() => setChips((value) => value + 1)} style={styles.stepperButton}>

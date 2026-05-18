@@ -125,6 +125,7 @@ export function MapViewport({
       renderedMapHeight,
       renderedMapWidth,
       scale: scale.value,
+      showCreatedChallenges: gameState.game.status === "CREATED",
       stations,
       tapMapX,
       tapMapY,
@@ -173,7 +174,7 @@ export function MapViewport({
       resolveTapToMapItems(event.x, event.y);
     });
 
-  const mapGesture = Gesture.Exclusive(Gesture.Simultaneous(panGesture, pinchGesture), tapGesture);
+  const mapGesture = Gesture.Exclusive(tapGesture, Gesture.Simultaneous(panGesture, pinchGesture));
 
   const handleMapWheel = (event: WheelEventLike) => {
     event.preventDefault?.();
@@ -231,6 +232,7 @@ export function MapViewport({
                 renderedMapHeight={renderedMapHeight}
                 renderedMapWidth={renderedMapWidth}
                 selectedChallengeId={selectedChallengeId}
+                showCreatedChallenges={gameState.game.status === "CREATED"}
               />
 
               <StationMarkers

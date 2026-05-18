@@ -20,6 +20,7 @@ type BuildMapSelectableItemsParams = {
   mapWidth: number;
   renderedMapHeight: number;
   renderedMapWidth: number;
+  showCreatedChallenges?: boolean;
   stations: StationStateResponse[];
 };
 
@@ -30,6 +31,7 @@ type ResolveMapTapParams = {
   renderedMapHeight: number;
   renderedMapWidth: number;
   scale: number;
+  showCreatedChallenges?: boolean;
   stations: StationStateResponse[];
   tapMapX: number;
   tapMapY: number;
@@ -45,6 +47,7 @@ export function buildMapSelectableItems({
   mapWidth,
   renderedMapHeight,
   renderedMapWidth,
+  showCreatedChallenges = false,
   stations,
 }: BuildMapSelectableItemsParams): MapSelectableItem[] {
   const stationItems = stations.map((station) => ({
@@ -55,7 +58,7 @@ export function buildMapSelectableItems({
     renderedY: scaleCoordinate(station.yCoordinate, mapHeight, renderedMapHeight),
   }));
   const challengeItems = challenges
-    .filter((challenge) => isChallengeVisible(challenge.status))
+    .filter((challenge) => showCreatedChallenges || isChallengeVisible(challenge.status))
     .map((challenge) => ({
       id: challenge.id,
       kind: "challenge" as const,
@@ -76,6 +79,7 @@ export function resolveMapTap({
   renderedMapHeight,
   renderedMapWidth,
   scale,
+  showCreatedChallenges = false,
   stations,
   tapMapX,
   tapMapY,
@@ -87,6 +91,7 @@ export function resolveMapTap({
     mapWidth,
     renderedMapHeight,
     renderedMapWidth,
+    showCreatedChallenges,
     stations,
   })
     .map((item) => ({

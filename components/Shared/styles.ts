@@ -261,6 +261,7 @@ export const styles = StyleSheet.create({
     padding: 16,
   },
   mapInspectorContent: {
+    gap: 10,
     paddingBottom: 4,
   },
   mapInspectorScroller: {
@@ -476,6 +477,24 @@ export const styles = StyleSheet.create({
     marginBottom: 14,
     paddingRight: 16,
   },
+  setupCoordinateInput: {
+    flex: 1,
+  },
+  setupCoordinateRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  setupDescriptionInput: {
+    minHeight: 78,
+    paddingTop: 12,
+    textAlignVertical: "top",
+  },
+  setupSection: {
+    borderTopColor: colors.line,
+    borderTopWidth: 1,
+    gap: 10,
+    paddingTop: 12,
+  },
   stat: {
     backgroundColor: colors.softPanel,
     borderColor: colors.line,
@@ -576,6 +595,12 @@ export const styles = StyleSheet.create({
     height: 48,
     justifyContent: "center",
     width: 52,
+  },
+  stepperNumberInput: {
+    flexGrow: 0,
+    flexShrink: 1,
+    maxWidth: 92,
+    minWidth: 64,
   },
   stepperRow: {
     flexDirection: "row",

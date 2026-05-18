@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
 
 import { Inspector } from "@/components/Inspector/Inspector";
@@ -23,6 +24,7 @@ export function MapScreen({
   selectedChallengeId,
   selectedStationId,
   selectedTeamId,
+  setupPanel,
   stations,
   teams,
 }: {
@@ -38,6 +40,7 @@ export function MapScreen({
   selectedChallengeId: string | null;
   selectedStationId: string | null;
   selectedTeamId: string;
+  setupPanel?: ReactNode;
   stations: StationStateResponse[];
   teams: TeamResponse[];
 }) {
@@ -49,7 +52,11 @@ export function MapScreen({
     ? stations.find((station) => station.id === selectedStationId) ?? null
     : null;
   const selectedChallenge = selectedChallengeId
-    ? challenges.find((challenge) => challenge.id === selectedChallengeId && isChallengeVisible(challenge.status)) ?? null
+    ? challenges.find(
+        (challenge) =>
+          challenge.id === selectedChallengeId &&
+          (gameState.game.status === "CREATED" || isChallengeVisible(challenge.status)),
+      ) ?? null
     : null;
   const handleSelectChallenge = (challengeId: string, shouldClearNearbyItems = true) => {
     if (shouldClearNearbyItems) setNearbyItems([]);
@@ -132,6 +139,7 @@ export function MapScreen({
           showsVerticalScrollIndicator={isWideLayout}
           style={styles.mapInspectorScroller}
         >
+          {setupPanel}
           {nearbyItems.length > 1 ? (
             <View style={styles.stationPickerPanel}>
               <Text style={styles.stationPickerTitle}>Nearby items</Text>
