@@ -148,6 +148,7 @@ export function MapScreen({
             selectedStationId={selectedStationId}
             stations={stations}
             teamsById={teamsById}
+            useMobileFrame={isMobileLayout}
           />
 
           {isMobileLayout ? (

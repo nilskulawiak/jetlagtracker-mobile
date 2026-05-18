@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Image, LayoutChangeEvent, Platform, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
@@ -35,6 +35,7 @@ export function MapViewport({
   onSelectMapItems,
   selectedChallengeId,
   selectedStationId,
+  useMobileFrame = false,
   stations,
   teamsById,
 }: {
@@ -44,6 +45,7 @@ export function MapViewport({
   onSelectMapItems: (items: MapSelectableItem[]) => void;
   selectedChallengeId: string | null;
   selectedStationId: string | null;
+  useMobileFrame?: boolean;
   stations: StationStateResponse[];
   teamsById: Map<string, TeamResponse>;
 }) {
@@ -54,6 +56,7 @@ export function MapViewport({
   const translateY = useSharedValue(0);
   const savedTranslateX = useSharedValue(0);
   const savedTranslateY = useSharedValue(0);
+  const hasSetInitialZoom = useSharedValue(false);
 
   const mapWidth = gameState.game.mapWidth || 1000;
   const mapHeight = gameState.game.mapHeight || 1000;
@@ -63,6 +66,35 @@ export function MapViewport({
       : 0;
   const renderedMapWidth = Math.max(mapWidth * fitScale, 1);
   const renderedMapHeight = Math.max(mapHeight * fitScale, 1);
+
+  useEffect(() => {
+    if (!useMobileFrame || fitScale <= 0 || hasSetInitialZoom.value) {
+      return;
+    }
+
+    const fillHeightZoom = viewportSize.height / renderedMapHeight;
+    const initialZoom = Math.min(Math.max(fillHeightZoom, MIN_MAP_ZOOM), 1.7);
+
+    scale.value = initialZoom;
+    savedScale.value = initialZoom;
+    translateX.value = 0;
+    translateY.value = 0;
+    savedTranslateX.value = 0;
+    savedTranslateY.value = 0;
+    hasSetInitialZoom.value = true;
+  }, [
+    fitScale,
+    hasSetInitialZoom,
+    renderedMapHeight,
+    savedScale,
+    savedTranslateX,
+    savedTranslateY,
+    scale,
+    translateX,
+    translateY,
+    useMobileFrame,
+    viewportSize.height,
+  ]);
 
   const clampOffset = (offset: number, contentSize: number, viewportContentSize: number, zoom: number) => {
     "worklet";
@@ -207,7 +239,7 @@ export function MapViewport({
     <GestureDetector gesture={mapGesture}>
       <View
         onLayout={handleViewportLayout}
-        style={styles.mapViewport}
+        style={[styles.mapViewport, useMobileFrame && styles.mobileMapViewport]}
         {...mapWebWheelProps}
       >
         {fitScale > 0 ? (
@@ -218,7 +250,13 @@ export function MapViewport({
               mapTransformStyle,
             ]}
           >
-            <View style={[styles.mapFrame, { height: renderedMapHeight, width: renderedMapWidth }]}>
+            <View
+              style={[
+                styles.mapFrame,
+                useMobileFrame && styles.mobileMapFrame,
+                { height: renderedMapHeight, width: renderedMapWidth },
+              ]}
+            >
               <Image
                 resizeMode="stretch"
                 source={resolveMapImage(gameState.game.mapImage || "taiwan")}

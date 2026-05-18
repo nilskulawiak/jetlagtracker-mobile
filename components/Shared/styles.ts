@@ -480,10 +480,19 @@ export const styles = StyleSheet.create({
     fontWeight: "900",
   },
   mobileMapContent: {
-    padding: 8,
+    padding: 0,
+  },
+  mobileMapFrame: {
+    borderRadius: 0,
+    borderWidth: 0,
   },
   mobileMapMainPane: {
     gap: 0,
+  },
+  mobileMapViewport: {
+    borderRadius: 0,
+    borderWidth: 0,
+    minHeight: 240,
   },
   mobileMapWorkspace: {
     gap: 0,
