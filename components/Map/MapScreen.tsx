@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { ScrollView, useWindowDimensions, View } from "react-native";
 
 import { Inspector } from "@/components/Inspector/Inspector";
 import { MapLegend } from "@/components/Map/MapLegend";
@@ -39,6 +39,8 @@ export function MapScreen({
   stations: StationStateResponse[];
   teams: TeamResponse[];
 }) {
+  const { width } = useWindowDimensions();
+  const isWideLayout = width >= 900;
   const teamsById = mapTeamsById(teams);
   const selectedStation = selectedStationId
     ? stations.find((station) => station.id === selectedStationId) ?? null
@@ -47,33 +49,56 @@ export function MapScreen({
     ? challenges.find((challenge) => challenge.id === selectedChallengeId && isChallengeVisible(challenge.status)) ?? null
     : null;
 
+  const inspector = (
+    <Inspector
+      challenge={selectedChallenge}
+      isMutating={isMutating}
+      onAddStationChips={onAddStationChips}
+      onCompleteChallenge={onCompleteChallenge}
+      onFailChallenge={onFailChallenge}
+      selectedTeamId={selectedTeamId}
+      station={selectedStation}
+      teams={teams}
+      teamsById={teamsById}
+    />
+  );
+
   return (
-    <View style={styles.screenStack}>
-      <MapLegend teams={teams} />
+    <View style={[styles.mapWorkspace, isWideLayout && styles.mapWorkspaceWide]}>
+      <View style={styles.mapMainPane}>
+        <View style={styles.mapLegendSlot}>
+          <MapLegend teams={teams} />
+        </View>
 
-      <MapViewport
-        challenges={challenges}
-        gameState={gameState}
-        onHoverChange={onHoverChange}
-        onSelectChallenge={onSelectChallenge}
-        onSelectStation={onSelectStation}
-        selectedChallengeId={selectedChallengeId}
-        selectedStationId={selectedStationId}
-        stations={stations}
-        teamsById={teamsById}
-      />
+        <View style={styles.mapViewportSlot}>
+          <MapViewport
+            challenges={challenges}
+            gameState={gameState}
+            onHoverChange={onHoverChange}
+            onSelectChallenge={onSelectChallenge}
+            onSelectStation={onSelectStation}
+            selectedChallengeId={selectedChallengeId}
+            selectedStationId={selectedStationId}
+            stations={stations}
+            teamsById={teamsById}
+          />
+        </View>
+      </View>
 
-      <Inspector
-        challenge={selectedChallenge}
-        isMutating={isMutating}
-        onAddStationChips={onAddStationChips}
-        onCompleteChallenge={onCompleteChallenge}
-        onFailChallenge={onFailChallenge}
-        selectedTeamId={selectedTeamId}
-        station={selectedStation}
-        teams={teams}
-        teamsById={teamsById}
-      />
+      <View
+        style={[
+          styles.mapInspectorShell,
+          isWideLayout ? styles.mapInspectorShellWide : styles.mapInspectorShellCompact,
+        ]}
+      >
+        <ScrollView
+          contentContainerStyle={styles.mapInspectorContent}
+          showsVerticalScrollIndicator={isWideLayout}
+          style={styles.mapInspectorScroller}
+        >
+          {inspector}
+        </ScrollView>
+      </View>
     </View>
   );
 }

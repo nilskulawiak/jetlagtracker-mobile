@@ -231,12 +231,14 @@ export const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   legendRow: {
+    alignItems: "center",
     flexDirection: "row",
     gap: 8,
     paddingRight: 16,
   },
   legendScroller: {
-    marginRight: -16,
+    flexGrow: 0,
+    flexShrink: 0,
   },
   legendText: {
     color: colors.text,
@@ -256,17 +258,67 @@ export const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
   },
+  mapContent: {
+    flex: 1,
+    overflow: "hidden",
+    padding: 16,
+  },
+  mapInspectorContent: {
+    paddingBottom: 4,
+  },
+  mapInspectorScroller: {
+    flex: 1,
+  },
+  mapInspectorShell: {
+    flexShrink: 0,
+    minHeight: 0,
+    overflow: "hidden",
+  },
+  mapInspectorShellCompact: {
+    height: 260,
+  },
+  mapInspectorShellWide: {
+    alignSelf: "stretch",
+    width: 360,
+  },
+  mapLegendSlot: {
+    flexShrink: 0,
+    height: 38,
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  mapMainPane: {
+    flex: 1,
+    gap: 12,
+    minHeight: 0,
+  },
   mapTransformLayer: {
-    height: "100%",
-    width: "100%",
+    alignSelf: "center",
   },
   mapViewport: {
+    alignItems: "center",
     alignSelf: "center",
     backgroundColor: "#d9e6f2",
     borderColor: "#c9d5e5",
     borderRadius: 8,
     borderWidth: 1,
+    flex: 1,
+    justifyContent: "center",
+    minHeight: 180,
     overflow: "hidden",
+    width: "100%",
+  },
+  mapViewportSlot: {
+    flex: 1,
+    minHeight: 0,
+  },
+  mapWorkspace: {
+    flex: 1,
+    gap: 12,
+    minHeight: 0,
+  },
+  mapWorkspaceWide: {
+    flexDirection: "row",
   },
   colorSwatch: {
     borderColor: colors.panel,

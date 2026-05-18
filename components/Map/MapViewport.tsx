@@ -1,4 +1,5 @@
-import { Image, Platform, useWindowDimensions, View } from "react-native";
+import { useState } from "react";
+import { Image, LayoutChangeEvent, Platform, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 
@@ -9,7 +10,18 @@ import { MAX_MAP_ZOOM, MIN_MAP_ZOOM } from "@/utils/coordinate";
 import { resolveMapImage } from "@/utils/mapAssets";
 
 type WheelEventLike = {
+  clientX?: number;
+  clientY?: number;
   deltaY: number;
+  offsetX?: number;
+  offsetY?: number;
+  nativeEvent?: {
+    clientX?: number;
+    clientY?: number;
+    deltaY?: number;
+    offsetX?: number;
+    offsetY?: number;
+  };
   preventDefault?: () => void;
   stopPropagation?: () => void;
 };
@@ -35,7 +47,7 @@ export function MapViewport({
   stations: StationStateResponse[];
   teamsById: Map<string, TeamResponse>;
 }) {
-  const { width } = useWindowDimensions();
+  const [viewportSize, setViewportSize] = useState({ height: 0, width: 0 });
   const scale = useSharedValue(1);
   const savedScale = useSharedValue(1);
   const translateX = useSharedValue(0);
@@ -45,34 +57,79 @@ export function MapViewport({
 
   const mapWidth = gameState.game.mapWidth || 1000;
   const mapHeight = gameState.game.mapHeight || 1000;
-  const renderedMapWidth = Math.max(width - 32, 1);
-  const renderedMapHeight = (renderedMapWidth / mapWidth) * mapHeight;
+  const fitScale =
+    viewportSize.width > 0 && viewportSize.height > 0
+      ? Math.min(viewportSize.width / mapWidth, viewportSize.height / mapHeight)
+      : 0;
+  const renderedMapWidth = Math.max(mapWidth * fitScale, 1);
+  const renderedMapHeight = Math.max(mapHeight * fitScale, 1);
 
-  const clampOffset = (offset: number, contentSize: number, zoom: number) => {
+  const clampOffset = (offset: number, contentSize: number, viewportContentSize: number, zoom: number) => {
     "worklet";
 
     if (zoom <= MIN_MAP_ZOOM) {
       return 0;
     }
 
-    const maxOffset = (contentSize * (zoom - 1)) / 2;
+    const maxOffset = Math.max(0, (contentSize * zoom - viewportContentSize) / 2);
 
     return Math.min(Math.max(offset, -maxOffset), maxOffset);
   };
 
+  const zoomAroundPoint = (nextScale: number, focalX: number, focalY: number) => {
+    "worklet";
+
+    const scaleRatio = nextScale / scale.value;
+    const centeredFocalX = focalX - viewportSize.width / 2;
+    const centeredFocalY = focalY - viewportSize.height / 2;
+
+    scale.value = nextScale;
+    translateX.value = clampOffset(
+      translateX.value * scaleRatio + centeredFocalX * (1 - scaleRatio),
+      renderedMapWidth,
+      viewportSize.width,
+      nextScale,
+    );
+    translateY.value = clampOffset(
+      translateY.value * scaleRatio + centeredFocalY * (1 - scaleRatio),
+      renderedMapHeight,
+      viewportSize.height,
+      nextScale,
+    );
+  };
+
   const mapTransformStyle = useAnimatedStyle(() => ({
     transform: [
-      { scale: scale.value },
       { translateX: translateX.value },
       { translateY: translateY.value },
+      { scale: scale.value },
     ],
   }));
+
+  const handleViewportLayout = (event: LayoutChangeEvent) => {
+    const { height, width } = event.nativeEvent.layout;
+
+    setViewportSize({
+      height: Math.max(height, 0),
+      width: Math.max(width, 0),
+    });
+  };
 
   const panGesture = Gesture.Pan()
     .minDistance(1)
     .onUpdate((event) => {
-      translateX.value = clampOffset(savedTranslateX.value + event.translationX, renderedMapWidth, scale.value);
-      translateY.value = clampOffset(savedTranslateY.value + event.translationY, renderedMapHeight, scale.value);
+      translateX.value = clampOffset(
+        savedTranslateX.value + event.translationX,
+        renderedMapWidth,
+        viewportSize.width,
+        scale.value,
+      );
+      translateY.value = clampOffset(
+        savedTranslateY.value + event.translationY,
+        renderedMapHeight,
+        viewportSize.height,
+        scale.value,
+      );
     })
     .onEnd(() => {
       savedTranslateX.value = translateX.value;
@@ -83,9 +140,7 @@ export function MapViewport({
     .onUpdate((event) => {
       const nextScale = Math.min(Math.max(savedScale.value * event.scale, MIN_MAP_ZOOM), MAX_MAP_ZOOM);
 
-      scale.value = nextScale;
-      translateX.value = clampOffset(translateX.value, renderedMapWidth, nextScale);
-      translateY.value = clampOffset(translateY.value, renderedMapHeight, nextScale);
+      zoomAroundPoint(nextScale, event.focalX, event.focalY);
     })
     .onEnd(() => {
       savedScale.value = scale.value;
@@ -99,12 +154,14 @@ export function MapViewport({
     event.preventDefault?.();
     event.stopPropagation?.();
 
-    const zoomDelta = event.deltaY > 0 ? -0.12 : 0.12;
+    const wheelEvent = event.nativeEvent ?? event;
+    const deltaY = wheelEvent.deltaY ?? event.deltaY;
+    const zoomDelta = deltaY > 0 ? -0.12 : 0.12;
     const nextScale = Math.min(Math.max(scale.value + zoomDelta, MIN_MAP_ZOOM), MAX_MAP_ZOOM);
+    const focalX = wheelEvent.offsetX ?? wheelEvent.clientX ?? event.clientX ?? viewportSize.width / 2;
+    const focalY = wheelEvent.offsetY ?? wheelEvent.clientY ?? event.clientY ?? viewportSize.height / 2;
 
-    scale.value = nextScale;
-    translateX.value = clampOffset(translateX.value, renderedMapWidth, nextScale);
-    translateY.value = clampOffset(translateY.value, renderedMapHeight, nextScale);
+    zoomAroundPoint(nextScale, focalX, focalY);
     savedScale.value = nextScale;
     savedTranslateX.value = translateX.value;
     savedTranslateY.value = translateY.value;
@@ -123,39 +180,48 @@ export function MapViewport({
   return (
     <GestureDetector gesture={mapGesture}>
       <View
-        style={[styles.mapViewport, { height: renderedMapHeight, width: renderedMapWidth }]}
+        onLayout={handleViewportLayout}
+        style={styles.mapViewport}
         {...mapWebWheelProps}
       >
-        <Animated.View style={[styles.mapTransformLayer, mapTransformStyle]}>
-          <View style={[styles.mapFrame, { height: renderedMapHeight, width: renderedMapWidth }]}>
-            <Image
-              resizeMode="stretch"
-              source={resolveMapImage(gameState.game.mapImage || "taiwan")}
-              style={[styles.mapImage, { height: renderedMapHeight, width: renderedMapWidth }]}
-            />
+        {fitScale > 0 ? (
+          <Animated.View
+            style={[
+              styles.mapTransformLayer,
+              { height: renderedMapHeight, width: renderedMapWidth },
+              mapTransformStyle,
+            ]}
+          >
+            <View style={[styles.mapFrame, { height: renderedMapHeight, width: renderedMapWidth }]}>
+              <Image
+                resizeMode="stretch"
+                source={resolveMapImage(gameState.game.mapImage || "taiwan")}
+                style={[styles.mapImage, { height: renderedMapHeight, width: renderedMapWidth }]}
+              />
 
-            <ChallengeMarkers
-              challenges={challenges}
-              mapHeight={mapHeight}
-              mapWidth={mapWidth}
-              onSelectChallenge={onSelectChallenge}
-              renderedMapHeight={renderedMapHeight}
-              renderedMapWidth={renderedMapWidth}
-              selectedChallengeId={selectedChallengeId}
-            />
+              <ChallengeMarkers
+                challenges={challenges}
+                mapHeight={mapHeight}
+                mapWidth={mapWidth}
+                onSelectChallenge={onSelectChallenge}
+                renderedMapHeight={renderedMapHeight}
+                renderedMapWidth={renderedMapWidth}
+                selectedChallengeId={selectedChallengeId}
+              />
 
-            <StationMarkers
-              mapHeight={mapHeight}
-              mapWidth={mapWidth}
-              onSelectStation={onSelectStation}
-              renderedMapHeight={renderedMapHeight}
-              renderedMapWidth={renderedMapWidth}
-              selectedStationId={selectedStationId}
-              stations={stations}
-              teamsById={teamsById}
-            />
-          </View>
-        </Animated.View>
+              <StationMarkers
+                mapHeight={mapHeight}
+                mapWidth={mapWidth}
+                onSelectStation={onSelectStation}
+                renderedMapHeight={renderedMapHeight}
+                renderedMapWidth={renderedMapWidth}
+                selectedStationId={selectedStationId}
+                stations={stations}
+                teamsById={teamsById}
+              />
+            </View>
+          </Animated.View>
+        ) : null}
       </View>
     </GestureDetector>
   );

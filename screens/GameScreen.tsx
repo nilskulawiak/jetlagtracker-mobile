@@ -44,7 +44,6 @@ export function GameScreen({
   const [selectedStationId, setSelectedStationId] = useState<string | null>(null);
   const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null);
   const [selectedTeamId, setSelectedTeamId] = useState("");
-  const [isMapHovered, setIsMapHovered] = useState(false);
   const [showGameDetails, setShowGameDetails] = useState(false);
   const {
     error,
@@ -177,38 +176,38 @@ export function GameScreen({
             <MaterialIcons color={colors.danger} name="error-outline" size={32} />
             <Text style={styles.errorText}>{error}</Text>
           </View>
+        ) : selectedTab === "map" && gameState ? (
+          <View style={styles.mapContent}>
+            {error ? <Text style={styles.inlineError}>{error}</Text> : null}
+            <MapScreen
+              challenges={challenges}
+              gameState={gameState}
+              isMutating={isMutating}
+              onAddStationChips={(stationId, body) =>
+                runMutation(() => addStationChips(gameId.trim(), stationId, body))
+              }
+              onCompleteChallenge={(challengeId, body) =>
+                runMutation(() => completeChallenge(gameId.trim(), challengeId, body))
+              }
+              onFailChallenge={(challengeId, body) =>
+                runMutation(() => failChallenge(gameId.trim(), challengeId, body))
+              }
+              onHoverChange={() => undefined}
+              onSelectChallenge={selectChallenge}
+              onSelectStation={selectStation}
+              selectedChallengeId={selectedChallengeId}
+              selectedStationId={selectedStationId}
+              selectedTeamId={selectedTeamId}
+              stations={stations}
+              teams={teams}
+            />
+          </View>
         ) : (
           <ScrollView
             contentContainerStyle={styles.content}
             refreshControl={<RefreshControl refreshing={isLoading} onRefresh={loadGameState} />}
-            scrollEnabled={Platform.OS !== "web" || !isMapHovered}
           >
             {error ? <Text style={styles.inlineError}>{error}</Text> : null}
-
-            {selectedTab === "map" && gameState ? (
-              <MapScreen
-                challenges={challenges}
-                gameState={gameState}
-                isMutating={isMutating}
-                onAddStationChips={(stationId, body) =>
-                  runMutation(() => addStationChips(gameId.trim(), stationId, body))
-                }
-                onCompleteChallenge={(challengeId, body) =>
-                  runMutation(() => completeChallenge(gameId.trim(), challengeId, body))
-                }
-                onFailChallenge={(challengeId, body) =>
-                  runMutation(() => failChallenge(gameId.trim(), challengeId, body))
-                }
-                onHoverChange={setIsMapHovered}
-                onSelectChallenge={selectChallenge}
-                onSelectStation={selectStation}
-                selectedChallengeId={selectedChallengeId}
-                selectedStationId={selectedStationId}
-                selectedTeamId={selectedTeamId}
-                stations={stations}
-                teams={teams}
-              />
-            ) : null}
 
             {selectedTab === "teams" ? (
               <TeamsScreen ownedStationCounts={ownedStationCounts} stations={stations} teams={teams} />
