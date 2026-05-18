@@ -498,9 +498,28 @@ export const styles = StyleSheet.create({
     gap: 0,
   },
   mobileTabBar: {
+    backgroundColor: colors.panel,
     borderTopColor: colors.line,
     borderTopWidth: 1,
-    padding: 8,
+    gap: 0,
+    paddingHorizontal: 6,
+    paddingTop: 4,
+    paddingBottom: 4,
+  },
+  mobileTabButton: {
+    borderRadius: 0,
+    flexDirection: "column",
+    gap: 1,
+    minHeight: 44,
+  },
+  mobileTabButtonActive: {
+    backgroundColor: colors.panel,
+  },
+  mobileTabText: {
+    fontSize: 11,
+  },
+  mobileTabTextActive: {
+    color: colors.info,
   },
   mobileTitle: {
     fontSize: 20,

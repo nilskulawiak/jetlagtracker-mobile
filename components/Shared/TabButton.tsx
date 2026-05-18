@@ -6,11 +6,13 @@ import { colors } from "@/utils/colors";
 
 export function TabButton({
   active,
+  compact = false,
   icon,
   label,
   onPress,
 }: {
   active: boolean;
+  compact?: boolean;
   icon: keyof typeof MaterialIcons.glyphMap;
   label: string;
   onPress: () => void;
@@ -20,10 +22,17 @@ export function TabButton({
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
       onPress={onPress}
-      style={[styles.tabButton, active && styles.tabButtonActive]}
+      style={[
+        styles.tabButton,
+        compact && styles.mobileTabButton,
+        active && styles.tabButtonActive,
+        compact && active && styles.mobileTabButtonActive,
+      ]}
     >
-      <MaterialIcons color={active ? colors.panel : colors.textSoft} name={icon} size={18} />
-      <Text style={[styles.tabText, active && styles.tabTextActive]}>{label}</Text>
+      <MaterialIcons color={active ? colors.info : colors.textSoft} name={icon} size={compact ? 21 : 18} />
+      <Text style={[styles.tabText, compact && styles.mobileTabText, active && styles.tabTextActive, compact && active && styles.mobileTabTextActive]}>
+        {label}
+      </Text>
     </Pressable>
   );
 }

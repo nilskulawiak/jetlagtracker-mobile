@@ -102,9 +102,9 @@ export function GameScreen({
 
   const tabs = (
     <View style={[styles.tabBar, isMobileLayout && styles.mobileTabBar]}>
-      <TabButton active={selectedTab === "map"} icon="map" label="Map" onPress={() => setSelectedTab("map")} />
-      <TabButton active={selectedTab === "teams"} icon="groups" label="Teams" onPress={() => setSelectedTab("teams")} />
-      <TabButton active={selectedTab === "log"} icon="history" label="Log" onPress={() => setSelectedTab("log")} />
+      <TabButton compact={isMobileLayout} active={selectedTab === "map"} icon="map" label="Map" onPress={() => setSelectedTab("map")} />
+      <TabButton compact={isMobileLayout} active={selectedTab === "teams"} icon="groups" label="Teams" onPress={() => setSelectedTab("teams")} />
+      <TabButton compact={isMobileLayout} active={selectedTab === "log"} icon="history" label="Log" onPress={() => setSelectedTab("log")} />
     </View>
   );
 
