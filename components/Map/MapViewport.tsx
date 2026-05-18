@@ -8,6 +8,8 @@ import { styles } from "@/components/Shared/styles";
 import type { ChallengeResponse, GameState, StationStateResponse, TeamResponse } from "@/types/game";
 import { MAX_MAP_ZOOM, MIN_MAP_ZOOM } from "@/utils/coordinate";
 import { resolveMapImage } from "@/utils/mapAssets";
+import { resolveMapTap } from "@/utils/mapSelection";
+import type { MapSelectableItem } from "@/utils/mapSelection";
 
 type WheelEventLike = {
   clientX?: number;
@@ -30,8 +32,7 @@ export function MapViewport({
   challenges,
   gameState,
   onHoverChange,
-  onSelectChallenge,
-  onSelectStation,
+  onSelectMapItems,
   selectedChallengeId,
   selectedStationId,
   stations,
@@ -40,8 +41,7 @@ export function MapViewport({
   challenges: ChallengeResponse[];
   gameState: GameState;
   onHoverChange: (isHovered: boolean) => void;
-  onSelectChallenge: (challengeId: string) => void;
-  onSelectStation: (stationId: string) => void;
+  onSelectMapItems: (items: MapSelectableItem[]) => void;
   selectedChallengeId: string | null;
   selectedStationId: string | null;
   stations: StationStateResponse[];
@@ -115,6 +115,24 @@ export function MapViewport({
     });
   };
 
+  const resolveTapToMapItems = (tapX: number, tapY: number) => {
+    const tapMapX = (tapX - viewportSize.width / 2 - translateX.value) / scale.value + renderedMapWidth / 2;
+    const tapMapY = (tapY - viewportSize.height / 2 - translateY.value) / scale.value + renderedMapHeight / 2;
+    const items = resolveMapTap({
+      challenges,
+      mapHeight,
+      mapWidth,
+      renderedMapHeight,
+      renderedMapWidth,
+      scale: scale.value,
+      stations,
+      tapMapX,
+      tapMapY,
+    });
+
+    onSelectMapItems(items);
+  };
+
   const panGesture = Gesture.Pan()
     .minDistance(1)
     .onUpdate((event) => {
@@ -148,7 +166,14 @@ export function MapViewport({
       savedTranslateY.value = translateY.value;
     });
 
-  const mapGesture = Gesture.Simultaneous(panGesture, pinchGesture);
+  const tapGesture = Gesture.Tap()
+    .maxDistance(8)
+    .runOnJS(true)
+    .onEnd((event) => {
+      resolveTapToMapItems(event.x, event.y);
+    });
+
+  const mapGesture = Gesture.Exclusive(Gesture.Simultaneous(panGesture, pinchGesture), tapGesture);
 
   const handleMapWheel = (event: WheelEventLike) => {
     event.preventDefault?.();
@@ -203,7 +228,6 @@ export function MapViewport({
                 challenges={challenges}
                 mapHeight={mapHeight}
                 mapWidth={mapWidth}
-                onSelectChallenge={onSelectChallenge}
                 renderedMapHeight={renderedMapHeight}
                 renderedMapWidth={renderedMapWidth}
                 selectedChallengeId={selectedChallengeId}
@@ -212,7 +236,6 @@ export function MapViewport({
               <StationMarkers
                 mapHeight={mapHeight}
                 mapWidth={mapWidth}
-                onSelectStation={onSelectStation}
                 renderedMapHeight={renderedMapHeight}
                 renderedMapWidth={renderedMapWidth}
                 selectedStationId={selectedStationId}

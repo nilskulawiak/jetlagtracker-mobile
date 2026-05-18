@@ -1,12 +1,14 @@
-import { ScrollView, useWindowDimensions, View } from "react-native";
+import { useState } from "react";
+import { Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
 
 import { Inspector } from "@/components/Inspector/Inspector";
 import { MapLegend } from "@/components/Map/MapLegend";
 import { MapViewport } from "@/components/Map/MapViewport";
 import { styles } from "@/components/Shared/styles";
 import type { ChallengeResponse, GameState, StationStateResponse, TeamResponse } from "@/types/game";
-import { isChallengeVisible } from "@/utils/colors";
+import { colors, getChallengeStatusColor, isChallengeVisible } from "@/utils/colors";
 import { mapTeamsById } from "@/utils/gameSelectors";
+import type { MapSelectableItem } from "@/utils/mapSelection";
 
 export function MapScreen({
   challenges,
@@ -41,6 +43,7 @@ export function MapScreen({
 }) {
   const { width } = useWindowDimensions();
   const isWideLayout = width >= 900;
+  const [nearbyItems, setNearbyItems] = useState<MapSelectableItem[]>([]);
   const teamsById = mapTeamsById(teams);
   const selectedStation = selectedStationId
     ? stations.find((station) => station.id === selectedStationId) ?? null
@@ -48,6 +51,40 @@ export function MapScreen({
   const selectedChallenge = selectedChallengeId
     ? challenges.find((challenge) => challenge.id === selectedChallengeId && isChallengeVisible(challenge.status)) ?? null
     : null;
+  const handleSelectChallenge = (challengeId: string, shouldClearNearbyItems = true) => {
+    if (shouldClearNearbyItems) setNearbyItems([]);
+    onSelectChallenge(challengeId);
+  };
+
+  const handleSelectStation = (stationId: string, shouldClearNearbyItems = true) => {
+    if (shouldClearNearbyItems) setNearbyItems([]);
+    onSelectStation(stationId);
+  };
+
+  const selectMapItem = (item: MapSelectableItem, shouldClearNearbyItems = true) => {
+    if (item.kind === "station") {
+      handleSelectStation(item.id, shouldClearNearbyItems);
+      return;
+    }
+
+    handleSelectChallenge(item.id, shouldClearNearbyItems);
+  };
+
+  const handleSelectMapItems = (items: MapSelectableItem[]) => {
+    if (items.length === 0) {
+      setNearbyItems([]);
+      return;
+    }
+
+    if (items.length === 1) {
+      setNearbyItems([]);
+      selectMapItem(items[0]);
+      return;
+    }
+
+    setNearbyItems(items);
+    selectMapItem(items[0], false);
+  };
 
   const inspector = (
     <Inspector
@@ -75,8 +112,7 @@ export function MapScreen({
             challenges={challenges}
             gameState={gameState}
             onHoverChange={onHoverChange}
-            onSelectChallenge={onSelectChallenge}
-            onSelectStation={onSelectStation}
+            onSelectMapItems={handleSelectMapItems}
             selectedChallengeId={selectedChallengeId}
             selectedStationId={selectedStationId}
             stations={stations}
@@ -96,6 +132,51 @@ export function MapScreen({
           showsVerticalScrollIndicator={isWideLayout}
           style={styles.mapInspectorScroller}
         >
+          {nearbyItems.length > 1 ? (
+            <View style={styles.stationPickerPanel}>
+              <Text style={styles.stationPickerTitle}>Nearby items</Text>
+              {nearbyItems.map((item) => {
+                const station =
+                  item.kind === "station"
+                    ? stations.find((nextStation) => nextStation.id === item.id)
+                    : null;
+                const owner = station?.ownerTeamId ? teamsById.get(station.ownerTeamId) : undefined;
+                const isSelected =
+                  (item.kind === "station" && selectedStationId === item.id) ||
+                  (item.kind === "challenge" && selectedChallengeId === item.id);
+
+                return (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isSelected }}
+                    key={`${item.kind}-${item.id}`}
+                    onPress={() => selectMapItem(item, false)}
+                    style={[
+                      styles.stationPickerOption,
+                      isSelected && styles.stationPickerOptionSelected,
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.legendDot,
+                        {
+                          backgroundColor:
+                            item.kind === "station"
+                              ? owner?.color ?? colors.stationEmpty
+                              : getChallengeStatusColor(item.status ?? ""),
+                        },
+                      ]}
+                    />
+                    <Text numberOfLines={1} style={styles.stationPickerOptionText}>
+                      {item.kind === "challenge" && item.rewardChips
+                        ? `${item.name} - ${item.rewardChips} chips`
+                        : item.name}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          ) : null}
           {inspector}
         </ScrollView>
       </View>
