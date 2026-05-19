@@ -87,7 +87,7 @@ export interface ChallengeResponse {
   description: string;
   reward: number;
   status: ChallengeStatus;
-  challengeType?: ChallengeType;
+  challengeType: ChallengeType;
   xCoordinate: number;
   yCoordinate: number;
 }

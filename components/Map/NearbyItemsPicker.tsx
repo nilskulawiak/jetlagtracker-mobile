@@ -62,7 +62,7 @@ export function NearbyItemsPicker({
               ]}
             />
             <Text numberOfLines={1} style={mapStyles.pickerOptionText}>
-              {item.kind === "challenge" && item.reward
+              {item.kind === "challenge" && item.reward && item.challengeType
                 ? `${item.name} - ${getChallengeValueLabel({ challengeType: item.challengeType, reward: item.reward })}`
                 : item.name}
             </Text>
