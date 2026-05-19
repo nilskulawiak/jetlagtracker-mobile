@@ -4,6 +4,7 @@ import { mapStyles } from "@/components/Map/mapStyles";
 import { styles } from "@/components/Shared/styles";
 import type { StationStateResponse, TeamResponse } from "@/types/game";
 import { colors, getChallengeStatusColor } from "@/utils/colors";
+import { getChallengeValueLabel } from "@/utils/challengeDisplay";
 import type { MapSelectableItem } from "@/utils/mapSelection";
 
 export function NearbyItemsPicker({
@@ -61,8 +62,8 @@ export function NearbyItemsPicker({
               ]}
             />
             <Text numberOfLines={1} style={mapStyles.pickerOptionText}>
-              {item.kind === "challenge" && item.rewardChips
-                ? `${item.name} - ${item.rewardChips} chips`
+              {item.kind === "challenge" && item.reward
+                ? `${item.name} - ${getChallengeValueLabel({ challengeType: item.challengeType, reward: item.reward })}`
                 : item.name}
             </Text>
           </Pressable>

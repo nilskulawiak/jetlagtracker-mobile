@@ -397,6 +397,10 @@ export const styles = StyleSheet.create({
     paddingTop: 12,
     textAlignVertical: "top",
   },
+  setupOptionSelected: {
+    borderColor: colors.ink,
+    borderWidth: 2,
+  },
   setupSection: {
     borderTopColor: colors.line,
     borderTopWidth: 1,

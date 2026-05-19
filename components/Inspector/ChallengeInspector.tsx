@@ -5,6 +5,7 @@ import { Stat } from "@/components/Shared/Stat";
 import { styles } from "@/components/Shared/styles";
 import type { ChallengeResponse } from "@/types/game";
 import { getChallengeStatusColor, isChallengeDone } from "@/utils/colors";
+import { getChallengeTypeLabel, getChallengeValueLabel } from "@/utils/challengeDisplay";
 
 export function ChallengeInspector({
   challenge,
@@ -37,7 +38,11 @@ export function ChallengeInspector({
       <Text style={styles.description}>{challenge.description}</Text>
 
       <View style={styles.statGrid}>
-        <Stat label="Reward" value={`${challenge.rewardChips} chips`} />
+        <Stat label="Type" value={getChallengeTypeLabel(challenge.challengeType)} />
+        <Stat label="Value" value={getChallengeValueLabel(challenge)} />
+      </View>
+
+      <View style={styles.statGrid}>
         <Stat label="Location" value={`${challenge.xCoordinate}, ${challenge.yCoordinate}`} />
       </View>
 

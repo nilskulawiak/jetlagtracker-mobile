@@ -4,6 +4,7 @@ import { mapStyles } from "@/components/Map/mapStyles";
 import type { ChallengeResponse, StationStateResponse, TeamResponse } from "@/types/game";
 import { colors, getChallengeStatusColor, isChallengeVisible } from "@/utils/colors";
 import { scaleCoordinate } from "@/utils/coordinate";
+import { getChallengeValueLabel } from "@/utils/challengeDisplay";
 
 export function ChallengeMarkers({
   challenges,
@@ -24,7 +25,7 @@ export function ChallengeMarkers({
 }) {
   return challenges.filter((challenge) => showCreatedChallenges || isChallengeVisible(challenge.status)).map((challenge) => (
     <View
-      accessibilityLabel={`${challenge.name}, ${challenge.rewardChips} chips`}
+      accessibilityLabel={`${challenge.name}, ${getChallengeValueLabel(challenge)}`}
       key={challenge.id}
       pointerEvents="none"
       style={[
@@ -43,7 +44,7 @@ export function ChallengeMarkers({
           selectedChallengeId === challenge.id && mapStyles.markerSelected,
         ]}
       >
-        <Text style={mapStyles.challengeMarkerText}>{challenge.rewardChips}</Text>
+        <Text style={mapStyles.challengeMarkerText}>{challenge.reward}</Text>
       </View>
     </View>
   ));

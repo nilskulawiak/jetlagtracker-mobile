@@ -22,10 +22,11 @@ function station(overrides: Partial<StationStateResponse>): StationStateResponse
 
 function challenge(overrides: Partial<ChallengeResponse>): ChallengeResponse {
   return {
+    challengeType: "CHIPS",
     description: "Challenge description",
     id: "challenge-1",
     name: "Challenge 1",
-    rewardChips: 10,
+    reward: 10,
     status: "AVAILABLE",
     xCoordinate: 200,
     yCoordinate: 200,

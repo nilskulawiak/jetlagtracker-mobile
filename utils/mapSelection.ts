@@ -1,4 +1,5 @@
 import type { ChallengeResponse, StationStateResponse } from "../types/game";
+import type { ChallengeType } from "../types/game";
 import { isChallengeVisible } from "./colors";
 import { scaleCoordinate } from "./coordinate";
 
@@ -10,8 +11,9 @@ export type MapSelectableItem = {
   name: string;
   renderedX: number;
   renderedY: number;
-  rewardChips?: number;
+  reward?: number;
   status?: string;
+  challengeType?: ChallengeType;
 };
 
 type BuildMapSelectableItemsParams = {
@@ -65,8 +67,9 @@ export function buildMapSelectableItems({
       name: challenge.name,
       renderedX: scaleCoordinate(challenge.xCoordinate, mapWidth, renderedMapWidth),
       renderedY: scaleCoordinate(challenge.yCoordinate, mapHeight, renderedMapHeight),
-      rewardChips: challenge.rewardChips,
+      reward: challenge.reward,
       status: challenge.status,
+      challengeType: challenge.challengeType,
     }));
 
   return [...stationItems, ...challengeItems];

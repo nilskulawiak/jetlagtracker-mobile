@@ -2,6 +2,8 @@ export type GameStatus = "CREATED" | "STARTED" | "DONE";
 
 export type ChallengeStatus = "CREATED" | "AVAILABLE" | "DONE";
 
+export type ChallengeType = "CHIPS" | "MULTIPLIER" | "STEAL";
+
 export interface GameResponse {
   id: string;
   name: string;
@@ -47,8 +49,9 @@ export interface CreateStationRequest {
 export interface CreateChallengeRequest {
   name: string;
   description: string;
-  rewardChips: number;
+  reward: number;
   status: ChallengeStatus;
+  challengeType: ChallengeType;
   xCoordinate: number;
   yCoordinate: number;
 }
@@ -82,8 +85,9 @@ export interface ChallengeResponse {
   id: string;
   name: string;
   description: string;
-  rewardChips: number;
+  reward: number;
   status: ChallengeStatus;
+  challengeType?: ChallengeType;
   xCoordinate: number;
   yCoordinate: number;
 }

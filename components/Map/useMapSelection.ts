@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 
 import type { ChallengeResponse, GameState, StationStateResponse, TeamResponse } from "@/types/game";
+import { getChallengeValueLabel } from "@/utils/challengeDisplay";
 import { isChallengeVisible } from "@/utils/colors";
 import type { MapSelectableItem } from "@/utils/mapSelection";
 
@@ -86,7 +87,7 @@ export function useMapSelection({
     : selectedStation
       ? teamsById.get(selectedStation.ownerTeamId ?? "")?.name ?? "Unclaimed"
       : selectedChallenge
-        ? `${selectedChallenge.rewardChips} chips`
+        ? getChallengeValueLabel(selectedChallenge)
         : nearbyItems.length > 1
           ? `${nearbyItems.length} nearby`
           : "Tap a marker";

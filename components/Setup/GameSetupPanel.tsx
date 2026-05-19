@@ -4,27 +4,17 @@ import { MaterialIcons } from "@expo/vector-icons";
 
 import { PrimaryButton } from "@/components/Shared/Buttons";
 import { styles } from "@/components/Shared/styles";
-import type { CreateChallengeRequest, CreateStationRequest, CreateTeamRequest } from "@/types/game";
+import type { ChallengeType, CreateChallengeRequest, CreateStationRequest, CreateTeamRequest } from "@/types/game";
 import { colors } from "@/utils/colors";
 
 const TEAM_COLORS = ["#d92d20", "#1570ef", "#039855", "#dc6803", "#7f56d9", "#0891b2"];
+const CHALLENGE_TYPES: ChallengeType[] = ["CHIPS", "MULTIPLIER", "STEAL"];
 
 function parsePositiveInteger(value: string, label: string) {
   const parsed = Number(value);
 
   if (!Number.isInteger(parsed) || parsed <= 0) {
     Alert.alert(label, `${label} must be a positive whole number.`);
-    return null;
-  }
-
-  return parsed;
-}
-
-function parseNumber(value: string, label: string) {
-  const parsed = Number(value);
-
-  if (!Number.isFinite(parsed)) {
-    Alert.alert(label, `${label} must be a number.`);
     return null;
   }
 
@@ -55,7 +45,8 @@ export function GameSetupPanel({
   const [stationY, setStationY] = useState("");
   const [challengeName, setChallengeName] = useState("");
   const [challengeDescription, setChallengeDescription] = useState("");
-  const [challengeReward, setChallengeReward] = useState("");
+  const [challengeChips, setChallengeChips] = useState("");
+  const [challengeType, setChallengeType] = useState<ChallengeType>("CHIPS");
   const [challengeX, setChallengeX] = useState("");
   const [challengeY, setChallengeY] = useState("");
 
@@ -123,9 +114,9 @@ export function GameSetupPanel({
   const submitChallenge = async () => {
     const trimmedName = challengeName.trim();
     const trimmedDescription = challengeDescription.trim();
-    const rewardChips = parsePositiveInteger(challengeReward, "Reward chips");
-    const xCoordinate = parseNumber(challengeX, "Challenge x coordinate");
-    const yCoordinate = parseNumber(challengeY, "Challenge y coordinate");
+    const reward = parsePositiveInteger(challengeChips, "Challenge reward");
+    const xCoordinate = parsePositiveInteger(challengeX, "Challenge x coordinate");
+    const yCoordinate = parsePositiveInteger(challengeY, "Challenge y coordinate");
 
     if (!trimmedName) {
       Alert.alert("Challenge name", "Enter a challenge name.");
@@ -137,19 +128,20 @@ export function GameSetupPanel({
       return;
     }
 
-    if (rewardChips === null || xCoordinate === null || yCoordinate === null) return;
+    if (reward === null || xCoordinate === null || yCoordinate === null) return;
 
     await onCreateChallenge({
+      reward,
+      challengeType,
       description: trimmedDescription,
       name: trimmedName,
-      rewardChips,
       status: "CREATED",
       xCoordinate,
       yCoordinate,
     });
     setChallengeName("");
     setChallengeDescription("");
-    setChallengeReward("");
+    setChallengeChips("");
     setChallengeX("");
     setChallengeY("");
   };
@@ -283,16 +275,32 @@ export function GameSetupPanel({
         <TextInput
           inputMode="numeric"
           keyboardType="number-pad"
-          onChangeText={setChallengeReward}
-          placeholder="Reward chips"
+          onChangeText={setChallengeChips}
+          placeholder="Chips / value"
           placeholderTextColor="#8a94a6"
           style={styles.menuInput}
-          value={challengeReward}
+          value={challengeChips}
         />
+        <View style={styles.colorSwatchRow}>
+          {CHALLENGE_TYPES.map((type) => (
+            <Pressable
+              accessibilityLabel={`Use challenge type ${type}`}
+              accessibilityRole="button"
+              key={type}
+              onPress={() => setChallengeType(type)}
+              style={[
+                styles.teamOption,
+                challengeType === type && styles.setupOptionSelected,
+              ]}
+            >
+              <Text style={styles.teamOptionText}>{type}</Text>
+            </Pressable>
+          ))}
+        </View>
         <View style={styles.setupCoordinateRow}>
           <TextInput
-            inputMode="decimal"
-            keyboardType="decimal-pad"
+            inputMode="numeric"
+            keyboardType="number-pad"
             onChangeText={setChallengeX}
             placeholder="X"
             placeholderTextColor="#8a94a6"
@@ -300,8 +308,8 @@ export function GameSetupPanel({
             value={challengeX}
           />
           <TextInput
-            inputMode="decimal"
-            keyboardType="decimal-pad"
+            inputMode="numeric"
+            keyboardType="number-pad"
             onChangeText={setChallengeY}
             placeholder="Y"
             placeholderTextColor="#8a94a6"
