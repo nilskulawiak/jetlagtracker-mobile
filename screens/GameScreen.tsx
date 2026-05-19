@@ -36,9 +36,11 @@ type Tab = "map" | "teams" | "log";
 
 export function GameScreen({
   initialGameId,
+  initialTeamId,
   onBackToMenu,
 }: {
   initialGameId?: string;
+  initialTeamId?: string;
   onBackToMenu?: () => void;
 }) {
   const { width } = useWindowDimensions();
@@ -63,7 +65,7 @@ export function GameScreen({
   const challenges = gameState?.challenges ?? [];
   const actions = gameState?.actions ?? [];
   const ownedStationCounts = getOwnedStationCounts(stations);
-  const { selectedTeam, selectedTeamId, setSelectedTeamId } = useSelectedTeam(teams);
+  const { selectedTeam, selectedTeamId, setSelectedTeamId } = useSelectedTeam(teams, initialTeamId);
   const {
     clearMapSelection,
     selectChallenge,
