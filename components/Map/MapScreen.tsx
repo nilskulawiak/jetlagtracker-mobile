@@ -1,13 +1,15 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { Pressable, Text, useWindowDimensions, View } from "react-native";
 
-import { ActionLog } from "@/components/ActionLog/ActionLog";
 import { Inspector } from "@/components/Inspector/Inspector";
+import { DesktopMapSidebar } from "@/components/Map/DesktopMapSidebar";
+import { mapStyles } from "@/components/Map/mapStyles";
 import { MapLegend } from "@/components/Map/MapLegend";
+import { MobileMapInspectorSheet } from "@/components/Map/MobileMapInspectorSheet";
 import { MapViewport } from "@/components/Map/MapViewport";
-import { styles } from "@/components/Shared/styles";
+import { useMapSelection } from "@/components/Map/useMapSelection";
 import type {
   ChallengeResponse,
   GameActionResponse,
@@ -15,55 +17,8 @@ import type {
   StationStateResponse,
   TeamResponse,
 } from "@/types/game";
-import { colors, getChallengeStatusColor, isChallengeVisible } from "@/utils/colors";
+import { colors } from "@/utils/colors";
 import { mapTeamsById } from "@/utils/gameSelectors";
-import type { MapSelectableItem } from "@/utils/mapSelection";
-
-function TeamSummary({
-  stations,
-  teams,
-}: {
-  stations: StationStateResponse[];
-  teams: TeamResponse[];
-}) {
-  const stationCounts = new Map<string, number>();
-
-  stations.forEach((station) => {
-    if (station.ownerTeamId) {
-      stationCounts.set(station.ownerTeamId, (stationCounts.get(station.ownerTeamId) ?? 0) + 1);
-    }
-  });
-
-  const unclaimedStations = stations.filter((station) => !station.ownerTeamId).length;
-
-  return (
-    <View style={styles.teamSummaryPanel}>
-      <View style={styles.panelHeader}>
-        <Text style={styles.teamSummaryTitle}>Teams</Text>
-        <Text style={styles.teamSummaryMeta}>{unclaimedStations} unclaimed</Text>
-      </View>
-
-      <View style={styles.teamSummaryList}>
-        {teams.map((team) => (
-          <View key={team.id} style={styles.teamSummaryRow}>
-            <View style={[styles.legendDot, { backgroundColor: team.color }]} />
-            <Text numberOfLines={1} style={styles.teamSummaryName}>
-              {team.name}
-            </Text>
-            <View style={styles.teamSummaryStatCell}>
-              <Text style={styles.teamSummaryStatValue}>{stationCounts.get(team.id) ?? 0}</Text>
-              <Text style={styles.teamSummaryStatLabel}>Stations</Text>
-            </View>
-            <View style={styles.teamSummaryStatCell}>
-              <Text style={styles.teamSummaryStatValue}>{team.availableChips}</Text>
-              <Text style={styles.teamSummaryStatLabel}>Chips</Text>
-            </View>
-          </View>
-        ))}
-      </View>
-    </View>
-  );
-}
 
 export function MapScreen({
   actions,
@@ -106,55 +61,30 @@ export function MapScreen({
   const isWideLayout = width >= 900;
   const isMobileLayout = width < 700;
   const [isLegendVisible, setIsLegendVisible] = useState(false);
-  const [isInspectorExpanded, setIsInspectorExpanded] = useState(false);
-  const [nearbyItems, setNearbyItems] = useState<MapSelectableItem[]>([]);
   const teamsById = mapTeamsById(teams);
-  const selectedStation = selectedStationId
-    ? stations.find((station) => station.id === selectedStationId) ?? null
-    : null;
-  const selectedChallenge = selectedChallengeId
-    ? challenges.find(
-        (challenge) =>
-          challenge.id === selectedChallengeId &&
-          (gameState.game.status === "CREATED" || isChallengeVisible(challenge.status)),
-      ) ?? null
-    : null;
-  const handleSelectChallenge = (challengeId: string, shouldClearNearbyItems = true) => {
-    if (shouldClearNearbyItems) setNearbyItems([]);
-    onSelectChallenge(challengeId);
-  };
-
-  const handleSelectStation = (stationId: string, shouldClearNearbyItems = true) => {
-    if (shouldClearNearbyItems) setNearbyItems([]);
-    onSelectStation(stationId);
-  };
-
-  const selectMapItem = (item: MapSelectableItem, shouldClearNearbyItems = true) => {
-    if (item.kind === "station") {
-      handleSelectStation(item.id, shouldClearNearbyItems);
-      return;
-    }
-
-    handleSelectChallenge(item.id, shouldClearNearbyItems);
-  };
-
-  const handleSelectMapItems = (items: MapSelectableItem[]) => {
-    if (items.length === 0) {
-      setNearbyItems([]);
-      setIsInspectorExpanded(false);
-      onClearSelection();
-      return;
-    }
-
-    if (items.length === 1) {
-      setNearbyItems([]);
-      selectMapItem(items[0]);
-      return;
-    }
-
-    setNearbyItems(items);
-    selectMapItem(items[0], false);
-  };
+  const {
+    handleSelectMapItems,
+    isInspectorExpanded,
+    mobileSheetSubtitle,
+    mobileSheetTitle,
+    nearbyItems,
+    selectedChallenge,
+    selectedStation,
+    selectNearbyItem,
+    setIsInspectorExpanded,
+    showMobileSheet,
+  } = useMapSelection({
+    challenges,
+    gameState,
+    onClearSelection,
+    onSelectChallenge,
+    onSelectStation,
+    selectedChallengeId,
+    selectedStationId,
+    setupPanel,
+    stations,
+    teamsById,
+  });
 
   const renderInspector = (hideHeader = false) => (
     <Inspector
@@ -171,24 +101,10 @@ export function MapScreen({
       teamsById={teamsById}
     />
   );
-  const mobileSheetTitle = setupPanel
-    ? "Game setup"
-    : selectedStation?.name ?? selectedChallenge?.name ?? (nearbyItems.length > 1 ? "Nearby items" : "Map selection");
-  const mobileSheetSubtitle = setupPanel
-    ? gameState.game.status
-    : selectedStation
-      ? teamsById.get(selectedStation.ownerTeamId ?? "")?.name ?? "Unclaimed"
-      : selectedChallenge
-        ? `${selectedChallenge.rewardChips} chips`
-        : nearbyItems.length > 1
-          ? `${nearbyItems.length} nearby`
-          : "Tap a marker";
-  const showMobileSheet = Boolean(setupPanel || selectedStation || selectedChallenge || nearbyItems.length > 1);
-
   return (
-    <View style={[styles.mapWorkspace, isWideLayout && styles.mapWorkspaceWide, isMobileLayout && styles.mobileMapWorkspace]}>
-      <View style={[styles.mapMainPane, isMobileLayout && styles.mobileMapMainPane]}>
-        <View style={styles.mapViewportSlot}>
+    <View style={[mapStyles.workspace, isWideLayout && mapStyles.workspaceWide, isMobileLayout && mapStyles.mobileWorkspace]}>
+      <View style={[mapStyles.mainPane, isMobileLayout && mapStyles.mobileMainPane]}>
+        <View style={mapStyles.viewportSlot}>
           <MapViewport
             challenges={challenges}
             gameState={gameState}
@@ -209,192 +125,58 @@ export function MapScreen({
                 accessibilityRole="button"
                 accessibilityState={{ expanded: isLegendVisible }}
                 onPress={() => setIsLegendVisible((value) => !value)}
-                style={styles.mapFloatingButton}
+                style={mapStyles.floatingButton}
               >
                 <MaterialIcons color={colors.ink} name="layers" size={20} />
-                <Text style={styles.mapFloatingButtonText}>Legend</Text>
+                <Text style={mapStyles.floatingButtonText}>Legend</Text>
               </Pressable>
 
               {isLegendVisible ? (
-                <View style={styles.mapLegendOverlay}>
+                <View style={mapStyles.legendOverlay}>
                   <MapLegend teams={teams} />
                 </View>
               ) : null}
             </>
           ) : (
-            <View style={[styles.mapLegendOverlay, styles.mapLegendOverlayDesktop]}>
+            <View style={[mapStyles.legendOverlay, mapStyles.legendOverlayDesktop]}>
               <MapLegend teams={teams} />
             </View>
           )}
         </View>
       </View>
 
-      {isMobileLayout && showMobileSheet ? (
-        <View
-          style={[
-            styles.mobileInspectorSheet,
-            isInspectorExpanded || setupPanel
-              ? styles.mobileInspectorSheetExpanded
-              : styles.mobileInspectorSheetCollapsed,
-          ]}
-        >
-          <Pressable
-            accessibilityLabel={isInspectorExpanded ? "Collapse inspector" : "Expand inspector"}
-            accessibilityRole="button"
-            accessibilityState={{ expanded: isInspectorExpanded || Boolean(setupPanel) }}
-            disabled={Boolean(setupPanel)}
-            onPress={() => setIsInspectorExpanded((value) => !value)}
-            style={styles.mobileInspectorHandle}
-          >
-            <View style={styles.mobileInspectorGrip} />
-            <View style={styles.mobileInspectorHeader}>
-              <View style={styles.actionBody}>
-                <Text numberOfLines={1} style={styles.mobileInspectorTitle}>
-                  {mobileSheetTitle}
-                </Text>
-                <Text numberOfLines={1} style={styles.mobileInspectorSubtitle}>
-                  {mobileSheetSubtitle}
-                </Text>
-              </View>
-              {setupPanel ? null : (
-                <MaterialIcons
-                  color={colors.textSoft}
-                  name={isInspectorExpanded ? "keyboard-arrow-down" : "keyboard-arrow-up"}
-                  size={24}
-                />
-              )}
-            </View>
-          </Pressable>
-
-          <ScrollView
-            contentContainerStyle={styles.mapInspectorContent}
-            showsVerticalScrollIndicator={isInspectorExpanded || Boolean(setupPanel)}
-            style={styles.mapInspectorScroller}
-          >
-            {setupPanel}
-            {nearbyItems.length > 1 ? (
-              <View style={styles.stationPickerPanel}>
-                <Text style={styles.stationPickerTitle}>Nearby items</Text>
-                {nearbyItems.map((item) => {
-                  const station =
-                    item.kind === "station"
-                      ? stations.find((nextStation) => nextStation.id === item.id)
-                      : null;
-                  const owner = station?.ownerTeamId ? teamsById.get(station.ownerTeamId) : undefined;
-                  const isSelected =
-                    (item.kind === "station" && selectedStationId === item.id) ||
-                    (item.kind === "challenge" && selectedChallengeId === item.id);
-
-                  return (
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: isSelected }}
-                      key={`${item.kind}-${item.id}`}
-                      onPress={() => selectMapItem(item, false)}
-                      style={[
-                        styles.stationPickerOption,
-                        isSelected && styles.stationPickerOptionSelected,
-                      ]}
-                    >
-                      <View
-                        style={[
-                          styles.legendDot,
-                          {
-                            backgroundColor:
-                              item.kind === "station"
-                                ? owner?.color ?? colors.stationEmpty
-                                : getChallengeStatusColor(item.status ?? ""),
-                          },
-                        ]}
-                      />
-                      <Text numberOfLines={1} style={styles.stationPickerOptionText}>
-                        {item.kind === "challenge" && item.rewardChips
-                          ? `${item.name} - ${item.rewardChips} chips`
-                          : item.name}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            ) : null}
-            {renderInspector(true)}
-          </ScrollView>
-        </View>
+      {isMobileLayout ? (
+        <MobileMapInspectorSheet
+          isExpanded={isInspectorExpanded}
+          nearbyItems={nearbyItems}
+          onSelectNearbyItem={selectNearbyItem}
+          onToggleExpanded={() => setIsInspectorExpanded((value) => !value)}
+          renderInspector={renderInspector}
+          selectedChallengeId={selectedChallengeId}
+          selectedStationId={selectedStationId}
+          setupPanel={setupPanel}
+          shouldShow={showMobileSheet}
+          stations={stations}
+          subtitle={mobileSheetSubtitle}
+          teamsById={teamsById}
+          title={mobileSheetTitle}
+        />
       ) : null}
 
       {isMobileLayout ? null : (
-        <View
-          style={[
-            styles.mapInspectorShell,
-            isWideLayout ? styles.mapInspectorShellWide : styles.mapInspectorShellCompact,
-          ]}
-        >
-          {isWideLayout ? <TeamSummary stations={stations} teams={teams} /> : null}
-          <View style={styles.mapInspectorPanelWide}>
-            {setupPanel}
-            {nearbyItems.length > 1 ? (
-              <View style={styles.stationPickerPanel}>
-                <Text style={styles.stationPickerTitle}>Nearby items</Text>
-                {nearbyItems.map((item) => {
-                  const station =
-                    item.kind === "station"
-                      ? stations.find((nextStation) => nextStation.id === item.id)
-                      : null;
-                  const owner = station?.ownerTeamId ? teamsById.get(station.ownerTeamId) : undefined;
-                  const isSelected =
-                    (item.kind === "station" && selectedStationId === item.id) ||
-                    (item.kind === "challenge" && selectedChallengeId === item.id);
-
-                  return (
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: isSelected }}
-                      key={`${item.kind}-${item.id}`}
-                      onPress={() => selectMapItem(item, false)}
-                      style={[
-                        styles.stationPickerOption,
-                        isSelected && styles.stationPickerOptionSelected,
-                      ]}
-                    >
-                      <View
-                        style={[
-                          styles.legendDot,
-                          {
-                            backgroundColor:
-                              item.kind === "station"
-                                ? owner?.color ?? colors.stationEmpty
-                                : getChallengeStatusColor(item.status ?? ""),
-                          },
-                        ]}
-                      />
-                      <Text numberOfLines={1} style={styles.stationPickerOptionText}>
-                        {item.kind === "challenge" && item.rewardChips
-                          ? `${item.name} - ${item.rewardChips} chips`
-                          : item.name}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            ) : null}
-            {renderInspector(false)}
-          </View>
-          {isWideLayout ? (
-            <View style={styles.mapActionLogPanel}>
-              <View style={styles.panelHeader}>
-                <Text style={styles.mapActionLogTitle}>Action log</Text>
-                <Text style={styles.teamSummaryMeta}>{actions.length} entries</Text>
-              </View>
-              <ScrollView
-                contentContainerStyle={styles.mapActionLogContent}
-                showsVerticalScrollIndicator
-                style={styles.mapActionLogScroller}
-              >
-                <ActionLog actions={actions} hideTitle />
-              </ScrollView>
-            </View>
-          ) : null}
-        </View>
+        <DesktopMapSidebar
+          actions={actions}
+          isWideLayout={isWideLayout}
+          nearbyItems={nearbyItems}
+          onSelectNearbyItem={selectNearbyItem}
+          renderInspector={renderInspector}
+          selectedChallengeId={selectedChallengeId}
+          selectedStationId={selectedStationId}
+          setupPanel={setupPanel}
+          stations={stations}
+          teams={teams}
+          teamsById={teamsById}
+        />
       )}
     </View>
   );

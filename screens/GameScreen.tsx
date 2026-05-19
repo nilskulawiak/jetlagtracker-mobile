@@ -27,6 +27,7 @@ import {
 } from "@/api/gameApi";
 import { ActionLog } from "@/components/ActionLog/ActionLog";
 import { TeamSelector } from "@/components/Inspector/TeamSelector";
+import { mapStyles } from "@/components/Map/mapStyles";
 import { MapScreen } from "@/components/Map/MapScreen";
 import { Pill } from "@/components/Shared/Pill";
 import { styles } from "@/components/Shared/styles";
@@ -220,9 +221,9 @@ export function GameScreen({
         ) : showMapView && gameState ? (
           <View
             style={[
-              styles.mapContent,
-              !isMobileLayout && styles.desktopMapContent,
-              isMobileLayout && styles.mobileMapContent,
+              mapStyles.content,
+              !isMobileLayout && mapStyles.desktopContent,
+              isMobileLayout && mapStyles.mobileContent,
             ]}
           >
             {error ? <Text style={styles.inlineError}>{error}</Text> : null}
