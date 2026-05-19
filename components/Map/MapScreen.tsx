@@ -3,16 +3,70 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
 
+import { ActionLog } from "@/components/ActionLog/ActionLog";
 import { Inspector } from "@/components/Inspector/Inspector";
 import { MapLegend } from "@/components/Map/MapLegend";
 import { MapViewport } from "@/components/Map/MapViewport";
 import { styles } from "@/components/Shared/styles";
-import type { ChallengeResponse, GameState, StationStateResponse, TeamResponse } from "@/types/game";
+import type {
+  ChallengeResponse,
+  GameActionResponse,
+  GameState,
+  StationStateResponse,
+  TeamResponse,
+} from "@/types/game";
 import { colors, getChallengeStatusColor, isChallengeVisible } from "@/utils/colors";
 import { mapTeamsById } from "@/utils/gameSelectors";
 import type { MapSelectableItem } from "@/utils/mapSelection";
 
+function TeamSummary({
+  stations,
+  teams,
+}: {
+  stations: StationStateResponse[];
+  teams: TeamResponse[];
+}) {
+  const stationCounts = new Map<string, number>();
+
+  stations.forEach((station) => {
+    if (station.ownerTeamId) {
+      stationCounts.set(station.ownerTeamId, (stationCounts.get(station.ownerTeamId) ?? 0) + 1);
+    }
+  });
+
+  const unclaimedStations = stations.filter((station) => !station.ownerTeamId).length;
+
+  return (
+    <View style={styles.teamSummaryPanel}>
+      <View style={styles.panelHeader}>
+        <Text style={styles.teamSummaryTitle}>Teams</Text>
+        <Text style={styles.teamSummaryMeta}>{unclaimedStations} unclaimed</Text>
+      </View>
+
+      <View style={styles.teamSummaryList}>
+        {teams.map((team) => (
+          <View key={team.id} style={styles.teamSummaryRow}>
+            <View style={[styles.legendDot, { backgroundColor: team.color }]} />
+            <Text numberOfLines={1} style={styles.teamSummaryName}>
+              {team.name}
+            </Text>
+            <View style={styles.teamSummaryStatCell}>
+              <Text style={styles.teamSummaryStatValue}>{stationCounts.get(team.id) ?? 0}</Text>
+              <Text style={styles.teamSummaryStatLabel}>Stations</Text>
+            </View>
+            <View style={styles.teamSummaryStatCell}>
+              <Text style={styles.teamSummaryStatValue}>{team.availableChips}</Text>
+              <Text style={styles.teamSummaryStatLabel}>Chips</Text>
+            </View>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
 export function MapScreen({
+  actions,
   challenges,
   gameState,
   isMutating,
@@ -30,6 +84,7 @@ export function MapScreen({
   stations,
   teams,
 }: {
+  actions: GameActionResponse[];
   challenges: ChallengeResponse[];
   gameState: GameState;
   isMutating: boolean;
@@ -111,6 +166,7 @@ export function MapScreen({
       onFailChallenge={onFailChallenge}
       selectedTeamId={selectedTeamId}
       station={selectedStation}
+      subtleEmpty={isWideLayout}
       teams={teams}
       teamsById={teamsById}
     />
@@ -132,12 +188,6 @@ export function MapScreen({
   return (
     <View style={[styles.mapWorkspace, isWideLayout && styles.mapWorkspaceWide, isMobileLayout && styles.mobileMapWorkspace]}>
       <View style={[styles.mapMainPane, isMobileLayout && styles.mobileMapMainPane]}>
-        {isMobileLayout ? null : (
-          <View style={styles.mapLegendSlot}>
-            <MapLegend teams={teams} />
-          </View>
-        )}
-
         <View style={styles.mapViewportSlot}>
           <MapViewport
             challenges={challenges}
@@ -148,6 +198,7 @@ export function MapScreen({
             selectedStationId={selectedStationId}
             stations={stations}
             teamsById={teamsById}
+            useTightFrame={isWideLayout}
             useMobileFrame={isMobileLayout}
           />
 
@@ -170,7 +221,11 @@ export function MapScreen({
                 </View>
               ) : null}
             </>
-          ) : null}
+          ) : (
+            <View style={[styles.mapLegendOverlay, styles.mapLegendOverlayDesktop]}>
+              <MapLegend teams={teams} />
+            </View>
+          )}
         </View>
       </View>
 
@@ -274,11 +329,8 @@ export function MapScreen({
             isWideLayout ? styles.mapInspectorShellWide : styles.mapInspectorShellCompact,
           ]}
         >
-          <ScrollView
-            contentContainerStyle={styles.mapInspectorContent}
-            showsVerticalScrollIndicator={isWideLayout}
-            style={styles.mapInspectorScroller}
-          >
+          {isWideLayout ? <TeamSummary stations={stations} teams={teams} /> : null}
+          <View style={styles.mapInspectorPanelWide}>
             {setupPanel}
             {nearbyItems.length > 1 ? (
               <View style={styles.stationPickerPanel}>
@@ -326,7 +378,22 @@ export function MapScreen({
               </View>
             ) : null}
             {renderInspector(false)}
-          </ScrollView>
+          </View>
+          {isWideLayout ? (
+            <View style={styles.mapActionLogPanel}>
+              <View style={styles.panelHeader}>
+                <Text style={styles.mapActionLogTitle}>Action log</Text>
+                <Text style={styles.teamSummaryMeta}>{actions.length} entries</Text>
+              </View>
+              <ScrollView
+                contentContainerStyle={styles.mapActionLogContent}
+                showsVerticalScrollIndicator
+                style={styles.mapActionLogScroller}
+              >
+                <ActionLog actions={actions} hideTitle />
+              </ScrollView>
+            </View>
+          ) : null}
         </View>
       )}
     </View>

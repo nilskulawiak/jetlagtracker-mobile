@@ -1,15 +1,20 @@
+import { MaterialIcons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
-import { Image, LayoutChangeEvent, Platform, View } from "react-native";
+import { Image, LayoutChangeEvent, Platform, Pressable, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 
 import { ChallengeMarkers, StationMarkers } from "@/components/Map/MapMarkers";
 import { styles } from "@/components/Shared/styles";
 import type { ChallengeResponse, GameState, StationStateResponse, TeamResponse } from "@/types/game";
+import { colors, isChallengeVisible } from "@/utils/colors";
 import { MAX_MAP_ZOOM, MIN_MAP_ZOOM } from "@/utils/coordinate";
 import { resolveMapImage } from "@/utils/mapAssets";
 import { resolveMapTap } from "@/utils/mapSelection";
 import type { MapSelectableItem } from "@/utils/mapSelection";
+
+const WIDE_INITIAL_CONTENT_ZOOM = 1.45;
+const WIDE_MAX_INITIAL_CONTENT_ZOOM = 2.4;
 
 type WheelEventLike = {
   clientX?: number;
@@ -35,6 +40,7 @@ export function MapViewport({
   onSelectMapItems,
   selectedChallengeId,
   selectedStationId,
+  useTightFrame = false,
   useMobileFrame = false,
   stations,
   teamsById,
@@ -45,6 +51,7 @@ export function MapViewport({
   onSelectMapItems: (items: MapSelectableItem[]) => void;
   selectedChallengeId: string | null;
   selectedStationId: string | null;
+  useTightFrame?: boolean;
   useMobileFrame?: boolean;
   stations: StationStateResponse[];
   teamsById: Map<string, TeamResponse>;
@@ -67,35 +74,6 @@ export function MapViewport({
   const renderedMapWidth = Math.max(mapWidth * fitScale, 1);
   const renderedMapHeight = Math.max(mapHeight * fitScale, 1);
 
-  useEffect(() => {
-    if (!useMobileFrame || fitScale <= 0 || hasSetInitialZoom.value) {
-      return;
-    }
-
-    const fillHeightZoom = viewportSize.height / renderedMapHeight;
-    const initialZoom = Math.min(Math.max(fillHeightZoom, MIN_MAP_ZOOM), 1.7);
-
-    scale.value = initialZoom;
-    savedScale.value = initialZoom;
-    translateX.value = 0;
-    translateY.value = 0;
-    savedTranslateX.value = 0;
-    savedTranslateY.value = 0;
-    hasSetInitialZoom.value = true;
-  }, [
-    fitScale,
-    hasSetInitialZoom,
-    renderedMapHeight,
-    savedScale,
-    savedTranslateX,
-    savedTranslateY,
-    scale,
-    translateX,
-    translateY,
-    useMobileFrame,
-    viewportSize.height,
-  ]);
-
   const clampOffset = (offset: number, contentSize: number, viewportContentSize: number, zoom: number) => {
     "worklet";
 
@@ -107,6 +85,79 @@ export function MapViewport({
 
     return Math.min(Math.max(offset, -maxOffset), maxOffset);
   };
+
+  useEffect(() => {
+    if ((!useMobileFrame && !useTightFrame) || fitScale <= 0 || hasSetInitialZoom.value) {
+      return;
+    }
+
+    const visibleChallenges = challenges.filter(
+      (challenge) => gameState.game.status === "CREATED" || isChallengeVisible(challenge.status),
+    );
+    const focusItems = [...stations, ...visibleChallenges];
+    const focusCenter =
+      focusItems.length > 0
+        ? focusItems.reduce(
+            (center, item) => ({
+              x: center.x + item.xCoordinate / focusItems.length,
+              y: center.y + item.yCoordinate / focusItems.length,
+            }),
+            { x: 0, y: 0 },
+          )
+        : { x: mapWidth / 2, y: mapHeight / 2 };
+
+    const initialZoom = useMobileFrame
+      ? Math.min(Math.max(viewportSize.height / renderedMapHeight, MIN_MAP_ZOOM), 1.7)
+      : Math.min(
+          Math.max(viewportSize.width / renderedMapWidth, WIDE_INITIAL_CONTENT_ZOOM, MIN_MAP_ZOOM),
+          WIDE_MAX_INITIAL_CONTENT_ZOOM,
+          MAX_MAP_ZOOM,
+        );
+    const initialTranslateX = useMobileFrame
+      ? 0
+      : clampOffset(
+          (renderedMapWidth / 2 - focusCenter.x * fitScale) * initialZoom,
+          renderedMapWidth,
+          viewportSize.width,
+          initialZoom,
+        );
+    const initialTranslateY = useMobileFrame
+      ? 0
+      : clampOffset(
+          (renderedMapHeight / 2 - focusCenter.y * fitScale) * initialZoom,
+          renderedMapHeight,
+          viewportSize.height,
+          initialZoom,
+        );
+
+    scale.value = initialZoom;
+    savedScale.value = initialZoom;
+    translateX.value = initialTranslateX;
+    translateY.value = initialTranslateY;
+    savedTranslateX.value = initialTranslateX;
+    savedTranslateY.value = initialTranslateY;
+    hasSetInitialZoom.value = true;
+  }, [
+    challenges,
+    fitScale,
+    gameState.game.status,
+    hasSetInitialZoom,
+    mapHeight,
+    mapWidth,
+    renderedMapHeight,
+    renderedMapWidth,
+    savedScale,
+    savedTranslateX,
+    savedTranslateY,
+    scale,
+    stations,
+    translateX,
+    translateY,
+    useMobileFrame,
+    useTightFrame,
+    viewportSize.height,
+    viewportSize.width,
+  ]);
 
   const zoomAroundPoint = (nextScale: number, focalX: number, focalY: number) => {
     "worklet";
@@ -145,6 +196,15 @@ export function MapViewport({
       height: Math.max(height, 0),
       width: Math.max(width, 0),
     });
+  };
+
+  const resetMapView = () => {
+    scale.value = MIN_MAP_ZOOM;
+    savedScale.value = MIN_MAP_ZOOM;
+    translateX.value = 0;
+    translateY.value = 0;
+    savedTranslateX.value = 0;
+    savedTranslateY.value = 0;
   };
 
   const resolveTapToMapItems = (tapX: number, tapY: number) => {
@@ -239,7 +299,11 @@ export function MapViewport({
     <GestureDetector gesture={mapGesture}>
       <View
         onLayout={handleViewportLayout}
-        style={[styles.mapViewport, useMobileFrame && styles.mobileMapViewport]}
+        style={[
+          styles.mapViewport,
+          useTightFrame && styles.mapViewportTight,
+          useMobileFrame && styles.mobileMapViewport,
+        ]}
         {...mapWebWheelProps}
       >
         {fitScale > 0 ? (
@@ -284,6 +348,17 @@ export function MapViewport({
               />
             </View>
           </Animated.View>
+        ) : null}
+
+        {useTightFrame ? (
+          <Pressable
+            accessibilityLabel="Fit full map"
+            accessibilityRole="button"
+            onPress={resetMapView}
+            style={styles.mapFitButton}
+          >
+            <MaterialIcons color={colors.ink} name="zoom-out-map" size={20} />
+          </Pressable>
         ) : null}
       </View>
     </GestureDetector>

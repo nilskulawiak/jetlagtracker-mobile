@@ -17,6 +17,9 @@ export function TabButton({
   label: string;
   onPress: () => void;
 }) {
+  const activeColor = compact ? colors.info : colors.panel;
+  const foregroundColor = active ? activeColor : colors.textSoft;
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -29,8 +32,15 @@ export function TabButton({
         compact && active && styles.mobileTabButtonActive,
       ]}
     >
-      <MaterialIcons color={active ? colors.info : colors.textSoft} name={icon} size={compact ? 21 : 18} />
-      <Text style={[styles.tabText, compact && styles.mobileTabText, active && styles.tabTextActive, compact && active && styles.mobileTabTextActive]}>
+      <MaterialIcons color={foregroundColor} name={icon} size={compact ? 21 : 18} />
+      <Text
+        style={[
+          styles.tabText,
+          compact && styles.mobileTabText,
+          active && styles.tabTextActive,
+          compact && active && styles.mobileTabTextActive,
+        ]}
+      >
         {label}
       </Text>
     </Pressable>

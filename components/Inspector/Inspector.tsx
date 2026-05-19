@@ -8,6 +8,7 @@ import type { ChallengeResponse, StationStateResponse, TeamResponse } from "@/ty
 export function Inspector({
   challenge,
   hideHeader = false,
+  subtleEmpty = false,
   isMutating,
   onAddStationChips,
   onCompleteChallenge,
@@ -19,6 +20,7 @@ export function Inspector({
 }: {
   challenge: ChallengeResponse | null;
   hideHeader?: boolean;
+  subtleEmpty?: boolean;
   isMutating: boolean;
   onAddStationChips: (stationId: string, body: { chips: number; teamId: string }) => Promise<void>;
   onCompleteChallenge: (challengeId: string, body: { teamId: string }) => Promise<void>;
@@ -55,8 +57,8 @@ export function Inspector({
   }
 
   return (
-    <View style={styles.panel}>
-      <Text style={styles.panelTitle}>Map selection</Text>
+    <View style={[styles.panel, subtleEmpty && styles.emptyInspectorPanel]}>
+      <Text style={[styles.panelTitle, subtleEmpty && styles.emptyInspectorTitle]}>Map selection</Text>
       <Text style={styles.emptyText}>Tap a station or challenge to inspect it and record an action.</Text>
     </View>
   );

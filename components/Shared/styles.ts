@@ -133,6 +133,15 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
+  emptyInspectorPanel: {
+    backgroundColor: "transparent",
+    borderColor: colors.lineStrong,
+    borderStyle: "dashed",
+  },
+  emptyInspectorTitle: {
+    color: colors.text,
+    fontSize: 18,
+  },
   errorText: {
     color: colors.danger,
     fontSize: 15,
@@ -280,15 +289,58 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "900",
   },
+  mapActionLogContent: {
+    gap: 8,
+    paddingBottom: 2,
+  },
+  mapActionLogPanel: {
+    backgroundColor: colors.panel,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    flex: 1,
+    gap: 10,
+    minHeight: 0,
+    padding: 14,
+  },
+  mapActionLogScroller: {
+    flex: 1,
+    minHeight: 0,
+  },
+  mapActionLogTitle: {
+    color: colors.ink,
+    flex: 1,
+    fontSize: 16,
+    fontWeight: "900",
+  },
+  mapFitButton: {
+    alignItems: "center",
+    backgroundColor: colors.panel,
+    borderColor: colors.lineStrong,
+    borderRadius: 8,
+    borderWidth: 1,
+    height: 38,
+    justifyContent: "center",
+    position: "absolute",
+    right: 10,
+    top: 10,
+    width: 38,
+    zIndex: 8,
+  },
   mapInspectorContent: {
     gap: 10,
     paddingBottom: 4,
+  },
+  mapInspectorPanelWide: {
+    flexShrink: 0,
+    gap: 10,
   },
   mapInspectorScroller: {
     flex: 1,
   },
   mapInspectorShell: {
     flexShrink: 0,
+    gap: 10,
     minHeight: 0,
     overflow: "hidden",
   },
@@ -317,6 +369,9 @@ export const styles = StyleSheet.create({
     top: 56,
     zIndex: 8,
   },
+  mapLegendOverlayDesktop: {
+    top: 10,
+  },
   mapMainPane: {
     flex: 1,
     gap: 12,
@@ -339,6 +394,10 @@ export const styles = StyleSheet.create({
     overflow: "hidden",
     width: "100%",
   },
+  mapViewportTight: {
+    backgroundColor: "transparent",
+    borderWidth: 0,
+  },
   mapViewportSlot: {
     flex: 1,
     minHeight: 0,
@@ -352,6 +411,12 @@ export const styles = StyleSheet.create({
   },
   mapWorkspaceWide: {
     flexDirection: "row",
+  },
+  desktopMapContent: {
+    alignSelf: "center",
+    maxWidth: 1840,
+    paddingHorizontal: 12,
+    width: "100%",
   },
   colorSwatch: {
     borderColor: colors.panel,
@@ -797,6 +862,59 @@ export const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "900",
     marginBottom: 12,
+  },
+  teamSummaryList: {
+    gap: 8,
+  },
+  teamSummaryMeta: {
+    color: colors.textSoft,
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  teamSummaryName: {
+    color: colors.ink,
+    flex: 1,
+    fontSize: 13,
+    fontWeight: "900",
+  },
+  teamSummaryPanel: {
+    backgroundColor: colors.panel,
+    borderColor: colors.line,
+    borderRadius: 8,
+    borderWidth: 1,
+    flexShrink: 0,
+    gap: 12,
+    marginBottom: 10,
+    padding: 14,
+  },
+  teamSummaryRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+  },
+  teamSummaryStatCell: {
+    alignItems: "flex-end",
+    minWidth: 58,
+  },
+  teamSummaryStatLabel: {
+    color: colors.textSoft,
+    fontSize: 10,
+    fontWeight: "800",
+    textTransform: "uppercase",
+  },
+  teamSummaryStatValue: {
+    color: colors.ink,
+    fontSize: 14,
+    fontWeight: "900",
+  },
+  teamSummaryStats: {
+    alignItems: "flex-end",
+  },
+  teamSummaryTitle: {
+    color: colors.ink,
+    flex: 1,
+    fontSize: 16,
+    fontWeight: "900",
   },
   teamOption: {
     alignItems: "center",

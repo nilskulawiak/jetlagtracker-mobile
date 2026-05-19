@@ -73,6 +73,7 @@ export function GameScreen({
   const selectedTeam = teams.find((team) => team.id === selectedTeamId) ?? null;
   const isGameCreated = gameState?.game.status === "CREATED";
   const createdChallengeCount = challenges.filter((challenge) => challenge.status === "CREATED").length;
+  const showMapView = !isMobileLayout || selectedTab === "map";
 
   useEffect(() => {
     if (teams.length === 0) {
@@ -102,9 +103,27 @@ export function GameScreen({
 
   const tabs = (
     <View style={[styles.tabBar, isMobileLayout && styles.mobileTabBar]}>
-      <TabButton compact={isMobileLayout} active={selectedTab === "map"} icon="map" label="Map" onPress={() => setSelectedTab("map")} />
-      <TabButton compact={isMobileLayout} active={selectedTab === "teams"} icon="groups" label="Teams" onPress={() => setSelectedTab("teams")} />
-      <TabButton compact={isMobileLayout} active={selectedTab === "log"} icon="history" label="Log" onPress={() => setSelectedTab("log")} />
+      <TabButton
+        active={selectedTab === "map"}
+        compact={isMobileLayout}
+        icon="map"
+        label="Map"
+        onPress={() => setSelectedTab("map")}
+      />
+      <TabButton
+        active={selectedTab === "teams"}
+        compact={isMobileLayout}
+        icon="groups"
+        label="Teams"
+        onPress={() => setSelectedTab("teams")}
+      />
+      <TabButton
+        active={selectedTab === "log"}
+        compact={isMobileLayout}
+        icon="history"
+        label="Log"
+        onPress={() => setSelectedTab("log")}
+      />
     </View>
   );
 
@@ -188,8 +207,6 @@ export function GameScreen({
           ) : null}
         </View>
 
-        {isMobileLayout ? null : tabs}
-
         {isLoading && !gameState ? (
           <View style={styles.centerState}>
             <ActivityIndicator color={colors.info} />
@@ -200,10 +217,17 @@ export function GameScreen({
             <MaterialIcons color={colors.danger} name="error-outline" size={32} />
             <Text style={styles.errorText}>{error}</Text>
           </View>
-        ) : selectedTab === "map" && gameState ? (
-          <View style={[styles.mapContent, isMobileLayout && styles.mobileMapContent]}>
+        ) : showMapView && gameState ? (
+          <View
+            style={[
+              styles.mapContent,
+              !isMobileLayout && styles.desktopMapContent,
+              isMobileLayout && styles.mobileMapContent,
+            ]}
+          >
             {error ? <Text style={styles.inlineError}>{error}</Text> : null}
             <MapScreen
+              actions={actions}
               challenges={challenges}
               gameState={gameState}
               isMutating={isMutating || isGameCreated}

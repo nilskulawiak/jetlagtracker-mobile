@@ -6,8 +6,12 @@ import type { GameActionResponse } from "@/types/game";
 import { colors } from "@/utils/colors";
 import { formatDate } from "@/utils/format";
 
-export function ActionLog({ actions }: { actions: GameActionResponse[] }) {
+export function ActionLog({ actions, hideTitle = false }: { actions: GameActionResponse[]; hideTitle?: boolean }) {
   if (actions.length === 0) {
+    if (hideTitle) {
+      return <Text style={styles.emptyText}>No actions yet.</Text>;
+    }
+
     return (
       <View style={styles.panel}>
         <Text style={styles.panelTitle}>Action log</Text>
