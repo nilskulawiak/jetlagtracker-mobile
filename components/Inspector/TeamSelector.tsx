@@ -4,11 +4,13 @@ import { styles } from "@/components/Shared/styles";
 import type { TeamResponse } from "@/types/game";
 
 export function TeamSelector({
+  compact = false,
   disabled,
   selectedTeamId,
   teams,
   onSelect,
 }: {
+  compact?: boolean;
   disabled: boolean;
   selectedTeamId: string;
   teams: TeamResponse[];
@@ -16,7 +18,7 @@ export function TeamSelector({
 }) {
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-      <View style={styles.selectorRow}>
+      <View style={[styles.selectorRow, compact && styles.selectorRowCompact]}>
         {teams.map((team) => {
           const selected = selectedTeamId === team.id;
 

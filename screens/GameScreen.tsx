@@ -9,13 +9,11 @@ import {
   RefreshControl,
   ScrollView,
   Text,
-  TextInput,
   useWindowDimensions,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { API_BASE_URL } from "@/api/gameApi";
 import { ActionLog } from "@/components/ActionLog/ActionLog";
 import { TeamSelector } from "@/components/Inspector/TeamSelector";
 import { mapStyles } from "@/components/Map/mapStyles";
@@ -57,7 +55,6 @@ export function GameScreen({
     mutationError,
     reload,
     runMutation,
-    setGameId,
   } = useGameState(initialGameId);
 
   const teams = gameState?.teams ?? [];
@@ -65,7 +62,7 @@ export function GameScreen({
   const challenges = gameState?.challenges ?? [];
   const actions = gameState?.actions ?? [];
   const ownedStationCounts = getOwnedStationCounts(stations);
-  const { selectedTeam, selectedTeamId, setSelectedTeamId } = useSelectedTeam(teams, initialTeamId);
+  const { selectedTeamId, setSelectedTeamId } = useSelectedTeam(teams, initialTeamId);
   const {
     clearMapSelection,
     selectChallenge,
@@ -153,34 +150,23 @@ export function GameScreen({
 
           {showGameDetails ? (
             <View style={styles.detailsPanel}>
-              <View style={styles.metaRow}>
-                <Pill label="Status" value={gameState?.game.status ?? "Loading"} />
-                <Pill label="Playing as" value={selectedTeam?.name ?? "No team"} />
-                <Pill label="API" value={API_BASE_URL.replace(/^https?:\/\//, "")} />
-              </View>
-
-              <TextInput
-                autoCapitalize="none"
-                autoCorrect={false}
-                onSubmitEditing={reload}
-                placeholder="Game id"
-                placeholderTextColor="#8a94a6"
-                style={styles.gameIdInput}
-                value={gameId}
-                onChangeText={setGameId}
-              />
-
-              {teams.length > 0 ? (
-                <>
-                  <Text style={styles.formLabel}>Playing as</Text>
-                  <TeamSelector
-                    disabled={isMutating}
+              <View style={styles.detailsInlineRow}>
+                <View style={styles.detailsStatusItem}>
+                  <Pill label="Status" value={gameState?.game.status ?? "Loading"} />
+                </View>
+                {teams.length > 0 ? (
+                  <View style={styles.detailsTeamSelector}>
+                    <Text style={styles.compactInlineLabel}>Playing as</Text>
+                    <TeamSelector
+                      compact
+                      disabled={isMutating}
                     selectedTeamId={selectedTeamId}
                     teams={teams}
                     onSelect={setSelectedTeamId}
                   />
-                </>
-              ) : null}
+                  </View>
+                ) : null}
+              </View>
             </View>
           ) : null}
         </View>

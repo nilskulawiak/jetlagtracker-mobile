@@ -88,6 +88,5 @@ export function useGameState(initialGameId = "") {
     mutationError,
     reload,
     runMutation,
-    setGameId,
   };
 }

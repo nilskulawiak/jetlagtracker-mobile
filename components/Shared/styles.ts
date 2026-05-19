@@ -108,6 +108,21 @@ export const styles = StyleSheet.create({
   detailsPanel: {
     marginTop: 12,
   },
+  detailsInlineRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  detailsStatusItem: {
+    flexGrow: 0,
+    flexShrink: 0,
+    width: 140,
+  },
+  detailsTeamSelector: {
+    flex: 1,
+    minWidth: 180,
+  },
   disabledButton: {
     opacity: 0.55,
   },
@@ -138,17 +153,6 @@ export const styles = StyleSheet.create({
     marginBottom: 8,
     marginTop: 4,
     textTransform: "uppercase",
-  },
-  gameIdInput: {
-    backgroundColor: colors.panel,
-    borderColor: colors.lineStrong,
-    borderRadius: 8,
-    borderWidth: 1,
-    color: colors.ink,
-    fontSize: 13,
-    marginTop: 12,
-    minHeight: 42,
-    paddingHorizontal: 12,
   },
   header: {
     backgroundColor: colors.page,
@@ -223,6 +227,13 @@ export const styles = StyleSheet.create({
   },
   colorSwatchSelected: {
     borderColor: colors.ink,
+  },
+  compactInlineLabel: {
+    color: colors.muted,
+    fontSize: 11,
+    fontWeight: "800",
+    marginBottom: 4,
+    textTransform: "uppercase",
   },
   metaRow: {
     flexDirection: "row",
@@ -384,6 +395,10 @@ export const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 14,
     paddingRight: 16,
+  },
+  selectorRowCompact: {
+    marginBottom: 0,
+    paddingRight: 0,
   },
   setupCoordinateInput: {
     flex: 1,
