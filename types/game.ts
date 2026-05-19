@@ -1,7 +1,11 @@
+export type GameStatus = "CREATED" | "STARTED" | "DONE";
+
+export type ChallengeStatus = "CREATED" | "AVAILABLE" | "DONE";
+
 export interface GameResponse {
   id: string;
   name: string;
-  status: string;
+  status: GameStatus;
   createdAt: string;
   mapWidth: number;
   mapHeight: number;
@@ -44,7 +48,7 @@ export interface CreateChallengeRequest {
   name: string;
   description: string;
   rewardChips: number;
-  status: string;
+  status: ChallengeStatus;
   xCoordinate: number;
   yCoordinate: number;
 }
@@ -79,7 +83,7 @@ export interface ChallengeResponse {
   name: string;
   description: string;
   rewardChips: number;
-  status: string;
+  status: ChallengeStatus;
   xCoordinate: number;
   yCoordinate: number;
 }

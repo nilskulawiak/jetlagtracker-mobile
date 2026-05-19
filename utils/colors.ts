@@ -1,3 +1,5 @@
+import type { ChallengeStatus as ChallengeStatusType } from "@/types/game";
+
 const COMPLETE_STATUS_TOKENS = ["complete"];
 const FAILED_STATUS_TOKENS = ["fail"];
 const ACTIVE_STATUS_TOKENS = ["active", "open"];
@@ -36,7 +38,7 @@ function hasStatusToken(status: string, tokens: string[]) {
   return tokens.some((token) => normalized.includes(token));
 }
 
-function normalizeChallengeStatus(status: string) {
+function normalizeChallengeStatus(status: string): ChallengeStatusType | string {
   return status.trim().toUpperCase();
 }
 

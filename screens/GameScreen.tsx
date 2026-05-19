@@ -1,6 +1,6 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -15,16 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import {
-  addStationChips,
-  API_BASE_URL,
-  completeChallenge,
-  createChallenge,
-  createStation,
-  createTeam,
-  failChallenge,
-  startGame,
-} from "@/api/gameApi";
+import { API_BASE_URL } from "@/api/gameApi";
 import { ActionLog } from "@/components/ActionLog/ActionLog";
 import { TeamSelector } from "@/components/Inspector/TeamSelector";
 import { mapStyles } from "@/components/Map/mapStyles";
@@ -34,7 +25,10 @@ import { styles } from "@/components/Shared/styles";
 import { TabButton } from "@/components/Shared/TabButton";
 import { GameSetupPanel } from "@/components/Setup/GameSetupPanel";
 import { TeamsScreen } from "@/components/Teams/TeamsScreen";
+import { useGameActions } from "@/hooks/useGameActions";
+import { useGameSelection } from "@/hooks/useGameSelection";
 import { useGameState } from "@/hooks/useGameState";
+import { useSelectedTeam } from "@/hooks/useSelectedTeam";
 import { colors } from "@/utils/colors";
 import { getOwnedStationCounts } from "@/utils/gameSelectors";
 
@@ -50,9 +44,6 @@ export function GameScreen({
   const { width } = useWindowDimensions();
   const isMobileLayout = width < 700;
   const [selectedTab, setSelectedTab] = useState<Tab>("map");
-  const [selectedStationId, setSelectedStationId] = useState<string | null>(null);
-  const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null);
-  const [selectedTeamId, setSelectedTeamId] = useState("");
   const [showGameDetails, setShowGameDetails] = useState(false);
   const {
     error,
@@ -61,6 +52,7 @@ export function GameScreen({
     isLoading,
     isMutating,
     loadGameState,
+    mutationError,
     reload,
     runMutation,
     setGameId,
@@ -71,36 +63,19 @@ export function GameScreen({
   const challenges = gameState?.challenges ?? [];
   const actions = gameState?.actions ?? [];
   const ownedStationCounts = getOwnedStationCounts(stations);
-  const selectedTeam = teams.find((team) => team.id === selectedTeamId) ?? null;
+  const { selectedTeam, selectedTeamId, setSelectedTeamId } = useSelectedTeam(teams);
+  const {
+    clearMapSelection,
+    selectChallenge,
+    selectedChallengeId,
+    selectedStationId,
+    selectStation,
+  } = useGameSelection();
+  const gameActions = useGameActions({ gameId, runMutation });
   const isGameCreated = gameState?.game.status === "CREATED";
   const createdChallengeCount = challenges.filter((challenge) => challenge.status === "CREATED").length;
   const showMapView = !isMobileLayout || selectedTab === "map";
-
-  useEffect(() => {
-    if (teams.length === 0) {
-      setSelectedTeamId("");
-      return;
-    }
-
-    if (!selectedTeamId || !teams.some((team) => team.id === selectedTeamId)) {
-      setSelectedTeamId(teams[0].id);
-    }
-  }, [selectedTeamId, teams]);
-
-  const selectStation = (stationId: string) => {
-    setSelectedStationId(stationId);
-    setSelectedChallengeId(null);
-  };
-
-  const selectChallenge = (challengeId: string) => {
-    setSelectedChallengeId(challengeId);
-    setSelectedStationId(null);
-  };
-
-  const clearMapSelection = () => {
-    setSelectedChallengeId(null);
-    setSelectedStationId(null);
-  };
+  const visibleError = (isMobileLayout ? null : mutationError) ?? error;
 
   const tabs = (
     <View style={[styles.tabBar, isMobileLayout && styles.mobileTabBar]}>
@@ -226,21 +201,15 @@ export function GameScreen({
               isMobileLayout && mapStyles.mobileContent,
             ]}
           >
-            {error ? <Text style={styles.inlineError}>{error}</Text> : null}
+            {visibleError ? <Text style={styles.inlineError}>{visibleError}</Text> : null}
             <MapScreen
               actions={actions}
               challenges={challenges}
               gameState={gameState}
               isMutating={isMutating || isGameCreated}
-              onAddStationChips={(stationId, body) =>
-                runMutation(() => addStationChips(gameId.trim(), stationId, body))
-              }
-              onCompleteChallenge={(challengeId, body) =>
-                runMutation(() => completeChallenge(gameId.trim(), challengeId, body))
-              }
-              onFailChallenge={(challengeId, body) =>
-                runMutation(() => failChallenge(gameId.trim(), challengeId, body))
-              }
+              onAddStationChips={gameActions.addStationChips}
+              onCompleteChallenge={gameActions.completeChallenge}
+              onFailChallenge={gameActions.failChallenge}
               onClearSelection={clearMapSelection}
               onHoverChange={() => undefined}
               onSelectChallenge={selectChallenge}
@@ -253,20 +222,10 @@ export function GameScreen({
                   <GameSetupPanel
                     challengeCount={createdChallengeCount}
                     isMutating={isMutating}
-                    onCreateChallenge={(body) =>
-                      runMutation(() => createChallenge(gameId.trim(), body))
-                    }
-                    onCreateStation={(body) =>
-                      runMutation(() => createStation(gameId.trim(), body))
-                    }
-                    onCreateTeam={(body) =>
-                      runMutation(() => createTeam(gameId.trim(), body))
-                    }
-                    onStartGame={(body) =>
-                      runMutation(async () => {
-                        await startGame(gameId.trim(), body);
-                      })
-                    }
+                    onCreateChallenge={gameActions.createChallenge}
+                    onCreateStation={gameActions.createStation}
+                    onCreateTeam={gameActions.createTeam}
+                    onStartGame={gameActions.startGame}
                   />
                 ) : undefined
               }
@@ -279,7 +238,7 @@ export function GameScreen({
             contentContainerStyle={styles.content}
             refreshControl={<RefreshControl refreshing={isLoading} onRefresh={loadGameState} />}
           >
-            {error ? <Text style={styles.inlineError}>{error}</Text> : null}
+            {visibleError ? <Text style={styles.inlineError}>{visibleError}</Text> : null}
 
             {selectedTab === "teams" ? (
               <TeamsScreen ownedStationCounts={ownedStationCounts} stations={stations} teams={teams} />

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
 
-import { DEFAULT_GAME_ID, getGameState } from "@/api/gameApi";
+import { ApiError, DEFAULT_GAME_ID, getGameState } from "@/api/gameApi";
 import type { GameState } from "@/types/game";
 
 function normalizeGameState(data: GameState): GameState {
@@ -9,7 +9,10 @@ function normalizeGameState(data: GameState): GameState {
     ...data,
     actions: data.actions ?? [],
     challenges: data.challenges ?? [],
-    stations: data.stations ?? [],
+    stations: (data.stations ?? []).map((station) => ({
+      ...station,
+      chips: station.chips ?? [],
+    })),
     teams: data.teams ?? [],
   };
 }
@@ -18,6 +21,7 @@ export function useGameState(initialGameId = DEFAULT_GAME_ID) {
   const [gameId, setGameId] = useState(initialGameId);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [mutationError, setMutationError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isMutating, setIsMutating] = useState(false);
 
@@ -30,6 +34,7 @@ export function useGameState(initialGameId = DEFAULT_GAME_ID) {
 
     try {
       setError(null);
+      setMutationError(null);
       const data = await getGameState(gameId.trim());
       setGameState(normalizeGameState(data));
     } catch (nextError) {
@@ -53,11 +58,19 @@ export function useGameState(initialGameId = DEFAULT_GAME_ID) {
     async (action: () => Promise<void>) => {
       try {
         setIsMutating(true);
+        setMutationError(null);
         await action();
         await loadGameState();
       } catch (nextError) {
         console.error(nextError);
-        Alert.alert("Action failed", "The backend rejected the action. Check the current team, station, or challenge.");
+        const message =
+          nextError instanceof ApiError
+            ? nextError.message
+            : "The backend rejected the action. Check the current team, station, or challenge.";
+        setMutationError(message);
+        if (Platform.OS !== "web") {
+          Alert.alert("Action failed", message);
+        }
       } finally {
         setIsMutating(false);
       }
@@ -72,6 +85,7 @@ export function useGameState(initialGameId = DEFAULT_GAME_ID) {
     isLoading,
     isMutating,
     loadGameState,
+    mutationError,
     reload,
     runMutation,
     setGameId,
