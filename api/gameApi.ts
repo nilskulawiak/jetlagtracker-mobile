@@ -12,8 +12,6 @@ import type {
   StartGameRequest,
 } from "@/types/game";
 
-export const DEFAULT_GAME_ID = "1f0e193e-7543-49ee-bdad-6925925f2813";
-
 function getLanBaseUrl() {
   const hostUri = Constants.expoConfig?.hostUri ?? Constants.manifest2?.extra?.expoGo?.debuggerHost;
   const host = hostUri?.split(":")[0];

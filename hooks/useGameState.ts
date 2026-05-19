@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Platform } from "react-native";
 
-import { ApiError, DEFAULT_GAME_ID, getGameState } from "@/api/gameApi";
+import { ApiError, getGameState } from "@/api/gameApi";
 import type { GameState } from "@/types/game";
 
 function normalizeGameState(data: GameState): GameState {
@@ -17,7 +17,7 @@ function normalizeGameState(data: GameState): GameState {
   };
 }
 
-export function useGameState(initialGameId = DEFAULT_GAME_ID) {
+export function useGameState(initialGameId = "") {
   const [gameId, setGameId] = useState(initialGameId);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [error, setError] = useState<string | null>(null);
