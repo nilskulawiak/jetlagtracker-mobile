@@ -1,6 +1,6 @@
-import type { ChallengeResponse, StationStateResponse } from "@/types/game";
-import { isChallengeVisible } from "@/utils/colors";
-import { scaleCoordinate } from "@/utils/coordinate";
+import type { ChallengeResponse, StationStateResponse } from "../types/game";
+import { isChallengeVisible } from "./colors";
+import { scaleCoordinate } from "./coordinate";
 
 export type MapSelectableKind = "challenge" | "station";
 
