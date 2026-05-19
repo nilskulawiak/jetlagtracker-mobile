@@ -19,8 +19,18 @@ function getLanBaseUrl() {
   return host ? `http://${host}:8080` : "http://localhost:8080";
 }
 
-export const API_BASE_URL =
+export const DEFAULT_API_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? getLanBaseUrl();
+
+let apiBaseUrl = DEFAULT_API_BASE_URL;
+
+export function getApiBaseUrl() {
+  return apiBaseUrl;
+}
+
+export function setApiBaseUrl(url: string) {
+  apiBaseUrl = url.replace(/\/$/, "");
+}
 
 export class ApiError extends Error {
   status: number;
@@ -33,7 +43,7 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(`${getApiBaseUrl()}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",

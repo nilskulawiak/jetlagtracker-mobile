@@ -14,12 +14,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { createGameFromPreset, getGames, getPresets } from "@/api/gameApi";
+import { createGameFromPreset, getApiBaseUrl, getGames, getPresets, setApiBaseUrl } from "@/api/gameApi";
 import { styles } from "@/components/Shared/styles";
 import type { GameResponse, PresetSummaryResponse } from "@/types/game";
 import { colors } from "@/utils/colors";
 
-type MenuMode = "home" | "continue" | "presets" | "presetForm";
+type MenuMode = "home" | "continue" | "presets" | "presetForm" | "settings";
 
 type DraftTeam = {
   id: string;
@@ -39,8 +39,25 @@ function newDraftTeam(index: number): DraftTeam {
   };
 }
 
+function normalizeBackendUrl(value: string) {
+  const trimmedValue = value.trim();
+
+  try {
+    const url = new URL(trimmedValue);
+
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      return null;
+    }
+
+    return url.toString().replace(/\/$/, "");
+  } catch {
+    return null;
+  }
+}
+
 export function MenuScreen({ onOpenGame }: { onOpenGame: (gameId: string) => void }) {
   const [mode, setMode] = useState<MenuMode>("home");
+  const [backendUrlDraft, setBackendUrlDraft] = useState(getApiBaseUrl());
   const [games, setGames] = useState<GameResponse[]>([]);
   const [presets, setPresets] = useState<PresetSummaryResponse[]>([]);
   const [selectedPreset, setSelectedPreset] = useState<PresetSummaryResponse | null>(null);
@@ -153,6 +170,26 @@ export function MenuScreen({ onOpenGame }: { onOpenGame: (gameId: string) => voi
     setMode("home");
   };
 
+  const openSettings = () => {
+    setBackendUrlDraft(getApiBaseUrl());
+    setError(null);
+    setMode("settings");
+  };
+
+  const saveSettings = () => {
+    const normalizedUrl = normalizeBackendUrl(backendUrlDraft);
+
+    if (!normalizedUrl) {
+      setError("Enter a valid backend URL starting with http:// or https://.");
+      return;
+    }
+
+    setApiBaseUrl(normalizedUrl);
+    setBackendUrlDraft(normalizedUrl);
+    setError(null);
+    setMode("home");
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
@@ -174,7 +211,13 @@ export function MenuScreen({ onOpenGame }: { onOpenGame: (gameId: string) => voi
             <View style={styles.titleBlock}>
               <Text style={styles.kicker}>Jet Lag tracker</Text>
               <Text numberOfLines={1} style={styles.title}>
-                {mode === "continue" ? "Continue game" : mode === "presetForm" ? "New game" : "Menu"}
+                {mode === "continue"
+                  ? "Continue game"
+                  : mode === "presetForm"
+                    ? "New game"
+                    : mode === "settings"
+                      ? "Settings"
+                      : "Menu"}
               </Text>
             </View>
           </View>
@@ -203,6 +246,7 @@ export function MenuScreen({ onOpenGame }: { onOpenGame: (gameId: string) => voi
                   <MenuButton disabled={isLoading} icon="auto-awesome" label="Create game from preset" onPress={loadPresets} />
                 </View>
               </View>
+              <MenuButton disabled={isLoading} icon="settings" label="Settings" onPress={openSettings} />
             </View>
           ) : null}
 
@@ -330,6 +374,31 @@ export function MenuScreen({ onOpenGame }: { onOpenGame: (gameId: string) => voi
               >
                 {isCreating ? <ActivityIndicator color={colors.panel} /> : <MaterialIcons color={colors.panel} name="check" size={19} />}
                 <Text style={styles.primaryButtonText}>Create and continue</Text>
+              </Pressable>
+            </View>
+          ) : null}
+
+          {mode === "settings" ? (
+            <View style={styles.screenStack}>
+              <View style={styles.panel}>
+                <Text style={styles.panelTitle}>Backend</Text>
+                <Text style={styles.formLabel}>URL</Text>
+                <TextInput
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  inputMode="url"
+                  keyboardType="url"
+                  onChangeText={setBackendUrlDraft}
+                  placeholder="http://192.168.0.10:8080"
+                  placeholderTextColor="#8a94a6"
+                  style={styles.menuInput}
+                  value={backendUrlDraft}
+                />
+              </View>
+
+              <Pressable onPress={saveSettings} style={styles.primaryButton}>
+                <MaterialIcons color={colors.panel} name="save" size={19} />
+                <Text style={styles.primaryButtonText}>Save settings</Text>
               </Pressable>
             </View>
           ) : null}
