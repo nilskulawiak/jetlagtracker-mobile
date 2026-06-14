@@ -34,9 +34,7 @@ export const mapStyles = StyleSheet.create({
     borderWidth: 2,
     height: 30,
     justifyContent: "center",
-    shadowColor: "#000000",
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
+    boxShadow: "0 2px 5px rgba(0, 0, 0, 0.2)",
     width: 30,
   },
   challengeMarkerText: {
@@ -296,9 +294,7 @@ export const mapStyles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 2,
     height: 16,
-    shadowColor: "#000000",
-    shadowOpacity: 0.22,
-    shadowRadius: 4,
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.22)",
     width: 16,
   },
   teamSummaryList: {

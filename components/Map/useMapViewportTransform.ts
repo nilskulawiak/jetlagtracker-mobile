@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { LayoutChangeEvent, Platform } from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { LayoutChangeEvent, Platform, type View } from "react-native";
 import { Gesture } from "react-native-gesture-handler";
 import { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 
@@ -29,6 +29,11 @@ type WheelEventLike = {
   stopPropagation?: () => void;
 };
 
+type WheelEventTarget = {
+  addEventListener: (type: "wheel", listener: (event: WheelEventLike) => void, options?: { passive?: boolean }) => void;
+  removeEventListener: (type: "wheel", listener: (event: WheelEventLike) => void) => void;
+};
+
 export function useMapViewportTransform({
   challenges,
   gameState,
@@ -50,6 +55,7 @@ export function useMapViewportTransform({
   useMobileFrame: boolean;
   useTightFrame: boolean;
 }) {
+  const mapViewportRef = useRef<View | null>(null);
   const [viewportSize, setViewportSize] = useState({ height: 0, width: 0 });
   const scale = useSharedValue(1);
   const savedScale = useSharedValue(1);
@@ -66,7 +72,7 @@ export function useMapViewportTransform({
   const renderedMapWidth = Math.max(mapWidth * fitScale, 1);
   const renderedMapHeight = Math.max(mapHeight * fitScale, 1);
 
-  const clampOffset = (offset: number, contentSize: number, viewportContentSize: number, zoom: number) => {
+  const clampOffset = useCallback((offset: number, contentSize: number, viewportContentSize: number, zoom: number) => {
     "worklet";
 
     if (zoom <= MIN_MAP_ZOOM) {
@@ -76,7 +82,7 @@ export function useMapViewportTransform({
     const maxOffset = Math.max(0, (contentSize * zoom - viewportContentSize) / 2);
 
     return Math.min(Math.max(offset, -maxOffset), maxOffset);
-  };
+  }, []);
 
   useEffect(() => {
     if ((!useMobileFrame && !useTightFrame) || fitScale <= 0 || hasSetInitialZoom.value) {
@@ -131,6 +137,7 @@ export function useMapViewportTransform({
     hasSetInitialZoom.value = true;
   }, [
     challenges,
+    clampOffset,
     fitScale,
     gameState.game.status,
     hasSetInitialZoom,
@@ -151,7 +158,7 @@ export function useMapViewportTransform({
     viewportSize.width,
   ]);
 
-  const zoomAroundPoint = (nextScale: number, focalX: number, focalY: number) => {
+  const zoomAroundPoint = useCallback((nextScale: number, focalX: number, focalY: number) => {
     "worklet";
 
     const scaleRatio = nextScale / scale.value;
@@ -171,7 +178,7 @@ export function useMapViewportTransform({
       viewportSize.height,
       nextScale,
     );
-  };
+  }, [clampOffset, renderedMapHeight, renderedMapWidth, scale, translateX, translateY, viewportSize.height, viewportSize.width]);
 
   const mapTransformStyle = useAnimatedStyle(() => ({
     transform: [
@@ -260,7 +267,7 @@ export function useMapViewportTransform({
 
   const mapGesture = Gesture.Exclusive(tapGesture, Gesture.Simultaneous(panGesture, pinchGesture));
 
-  const handleMapWheel = (event: WheelEventLike) => {
+  const handleMapWheel = useCallback((event: WheelEventLike) => {
     event.preventDefault?.();
     event.stopPropagation?.();
 
@@ -275,15 +282,37 @@ export function useMapViewportTransform({
     savedScale.value = nextScale;
     savedTranslateX.value = translateX.value;
     savedTranslateY.value = translateY.value;
-  };
+  }, [
+    savedScale,
+    savedTranslateX,
+    savedTranslateY,
+    scale,
+    translateX,
+    translateY,
+    viewportSize.height,
+    viewportSize.width,
+    zoomAroundPoint,
+  ]);
+
+  useEffect(() => {
+    if (Platform.OS !== "web") {
+      return;
+    }
+
+    const target = mapViewportRef.current as unknown as WheelEventTarget | null;
+
+    target?.addEventListener("wheel", handleMapWheel, { passive: false });
+
+    return () => {
+      target?.removeEventListener("wheel", handleMapWheel);
+    };
+  }, [handleMapWheel]);
 
   const mapWebWheelProps =
     Platform.OS === "web"
       ? {
           onMouseEnter: () => onHoverChange(true),
           onMouseLeave: () => onHoverChange(false),
-          onWheel: handleMapWheel,
-          onWheelCapture: handleMapWheel,
         }
       : {};
 
@@ -292,6 +321,7 @@ export function useMapViewportTransform({
     handleViewportLayout,
     mapGesture,
     mapTransformStyle,
+    mapViewportRef,
     mapWebWheelProps,
     renderedMapHeight,
     renderedMapWidth,

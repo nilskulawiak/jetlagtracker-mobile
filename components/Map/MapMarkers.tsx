@@ -27,9 +27,9 @@ export function ChallengeMarkers({
     <View
       accessibilityLabel={`${challenge.name}, ${getChallengeValueLabel(challenge)}`}
       key={challenge.id}
-      pointerEvents="none"
       style={[
         mapStyles.markerTouchTarget,
+        { pointerEvents: "none" },
         {
           left: scaleCoordinate(challenge.xCoordinate, mapWidth, renderedMapWidth),
           top: scaleCoordinate(challenge.yCoordinate, mapHeight, renderedMapHeight),
@@ -74,9 +74,9 @@ export function StationMarkers({
       <View
         accessibilityLabel={station.name}
         key={station.id}
-        pointerEvents="none"
         style={[
           mapStyles.markerTouchTarget,
+          { pointerEvents: "none" },
           {
             left: scaleCoordinate(station.xCoordinate, mapWidth, renderedMapWidth),
             top: scaleCoordinate(station.yCoordinate, mapHeight, renderedMapHeight),

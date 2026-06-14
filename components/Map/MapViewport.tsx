@@ -41,6 +41,7 @@ export function MapViewport({
     handleViewportLayout,
     mapGesture,
     mapTransformStyle,
+    mapViewportRef,
     mapWebWheelProps,
     renderedMapHeight,
     renderedMapWidth,
@@ -61,6 +62,7 @@ export function MapViewport({
     <GestureDetector gesture={mapGesture}>
       <View
         onLayout={handleViewportLayout}
+        ref={mapViewportRef}
         style={[
           mapStyles.viewport,
           useTightFrame && mapStyles.viewportTight,
