@@ -3,7 +3,7 @@ import { Pressable, Text, View } from "react-native";
 
 import { styles } from "@/components/Shared/styles";
 import { colors } from "@/utils/colors";
-import { PageLayout } from "./PageLayout";
+import { PageLayout } from "@/components/Shared/PageLayout";
 
 export function HomePage({
   onContinueGame,

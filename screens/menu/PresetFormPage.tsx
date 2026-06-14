@@ -6,7 +6,7 @@ import { createGameFromPreset } from "@/api/gameApi";
 import { styles } from "@/components/Shared/styles";
 import { colors } from "@/utils/colors";
 import type { PresetSummaryResponse } from "@/types/game";
-import { PageLayout } from "./PageLayout";
+import { PageLayout } from "@/components/Shared/PageLayout";
 
 type DraftTeam = {
   id: string;

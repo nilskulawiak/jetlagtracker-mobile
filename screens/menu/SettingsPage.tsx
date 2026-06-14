@@ -5,7 +5,7 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import { getApiBaseUrl, setApiBaseUrl } from "@/api/gameApi";
 import { styles } from "@/components/Shared/styles";
 import { colors } from "@/utils/colors";
-import { PageLayout } from "./PageLayout";
+import { PageLayout } from "@/components/Shared/PageLayout";
 
 function normalizeBackendUrl(value: string) {
   const trimmedValue = value.trim();
