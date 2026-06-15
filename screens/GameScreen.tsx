@@ -198,6 +198,7 @@ export function GameScreen({
               onAddStationChips={gameActions.addStationChips}
               onCompleteChallenge={gameActions.completeChallenge}
               onFailChallenge={gameActions.failChallenge}
+              onStartChallenge={gameActions.startChallenge}
               onClearSelection={clearMapSelection}
               onHoverChange={() => undefined}
               onSelectChallenge={selectChallenge}

@@ -5,12 +5,14 @@ import {
   createStation,
   createTeam,
   failChallenge,
+  startChallenge,
   startGame,
 } from "@/api/gameApi";
 import type {
   CreateChallengeRequest,
   CreateStationRequest,
   CreateTeamRequest,
+  StartChallengeRequest,
   StartGameRequest,
 } from "@/types/game";
 
@@ -36,6 +38,8 @@ export function useGameActions({
       runMutation(() => createTeam(normalizedGameId, body)),
     failChallenge: (challengeId: string, body: { teamId: string }) =>
       runMutation(() => failChallenge(normalizedGameId, challengeId, body)),
+    startChallenge: (challengeId: string, body: StartChallengeRequest) =>
+      runMutation(() => startChallenge(normalizedGameId, challengeId, body)),
     startGame: (body: StartGameRequest) =>
       runMutation(async () => {
         await startGame(normalizedGameId, body);

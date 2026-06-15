@@ -14,6 +14,7 @@ import type {
   ChallengeResponse,
   GameActionResponse,
   GameState,
+  StartChallengeRequest,
   StationStateResponse,
   TeamResponse,
 } from "@/types/game";
@@ -28,6 +29,7 @@ export function MapScreen({
   onAddStationChips,
   onCompleteChallenge,
   onFailChallenge,
+  onStartChallenge,
   onHoverChange,
   onClearSelection,
   onSelectChallenge,
@@ -46,6 +48,7 @@ export function MapScreen({
   onAddStationChips: (stationId: string, body: { chips: number; teamId: string }) => Promise<void>;
   onCompleteChallenge: (challengeId: string, body: { teamId: string }) => Promise<void>;
   onFailChallenge: (challengeId: string, body: { teamId: string }) => Promise<void>;
+  onStartChallenge: (challengeId: string, body: StartChallengeRequest) => Promise<void>;
   onClearSelection: () => void;
   onHoverChange: (isHovered: boolean) => void;
   onSelectChallenge: (challengeId: string) => void;
@@ -94,6 +97,7 @@ export function MapScreen({
       onAddStationChips={onAddStationChips}
       onCompleteChallenge={onCompleteChallenge}
       onFailChallenge={onFailChallenge}
+      onStartChallenge={onStartChallenge}
       selectedTeamId={selectedTeamId}
       station={selectedStation}
       subtleEmpty={isWideLayout}

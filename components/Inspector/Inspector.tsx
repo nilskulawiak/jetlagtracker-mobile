@@ -3,7 +3,7 @@ import { Text, View } from "react-native";
 import { ChallengeInspector } from "@/components/Inspector/ChallengeInspector";
 import { StationInspector } from "@/components/Inspector/StationInspector";
 import { styles } from "@/components/Shared/styles";
-import type { ChallengeResponse, StationStateResponse, TeamResponse } from "@/types/game";
+import type { ChallengeResponse, StartChallengeRequest, StationStateResponse, TeamResponse } from "@/types/game";
 
 export function Inspector({
   challenge,
@@ -13,6 +13,7 @@ export function Inspector({
   onAddStationChips,
   onCompleteChallenge,
   onFailChallenge,
+  onStartChallenge,
   selectedTeamId,
   station,
   teams,
@@ -25,6 +26,7 @@ export function Inspector({
   onAddStationChips: (stationId: string, body: { chips: number; teamId: string }) => Promise<void>;
   onCompleteChallenge: (challengeId: string, body: { teamId: string }) => Promise<void>;
   onFailChallenge: (challengeId: string, body: { teamId: string }) => Promise<void>;
+  onStartChallenge: (challengeId: string, body: StartChallengeRequest) => Promise<void>;
   selectedTeamId: string;
   station: StationStateResponse | null;
   teams: TeamResponse[];
@@ -51,6 +53,7 @@ export function Inspector({
         isMutating={isMutating}
         onCompleteChallenge={onCompleteChallenge}
         onFailChallenge={onFailChallenge}
+        onStartChallenge={onStartChallenge}
         selectedTeamId={selectedTeamId}
       />
     );
