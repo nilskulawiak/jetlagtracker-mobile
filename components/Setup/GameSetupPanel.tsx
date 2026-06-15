@@ -15,6 +15,31 @@ import { colors } from "@/utils/colors";
 import { getChallengeTypeLabel } from "@/utils/challengeDisplay";
 import { CHALLENGE_TYPES, TEAM_COLORS, confirmDelete, parsePositiveInteger } from "@/utils/setupHelpers";
 
+function SectionHeader({
+  label,
+  isOpen,
+  onToggle,
+}: {
+  label: string;
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onToggle}
+      style={[styles.panelHeader, { paddingVertical: 4 }]}
+    >
+      <Text style={styles.formLabel}>{label}</Text>
+      <MaterialIcons
+        color={colors.muted}
+        name={isOpen ? "expand-less" : "expand-more"}
+        size={20}
+      />
+    </Pressable>
+  );
+}
+
 export function GameSetupPanel({
   challengeCount,
   isMutating,
@@ -37,6 +62,10 @@ export function GameSetupPanel({
   teams: TeamResponse[];
 }) {
   const [numberOfChallenges, setNumberOfChallenges] = useState(String(Math.max(1, Math.min(3, challengeCount || 1))));
+
+  const [isTeamFormOpen, setIsTeamFormOpen] = useState(false);
+  const [isStationFormOpen, setIsStationFormOpen] = useState(false);
+  const [isChallengeFormOpen, setIsChallengeFormOpen] = useState(false);
 
   const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
   const [teamColor, setTeamColor] = useState(TEAM_COLORS[0]);
@@ -74,6 +103,7 @@ export function GameSetupPanel({
     setTeamName(team.name);
     setTeamColor(team.color);
     setTeamStartingChips(team.availableChips != null ? String(team.availableChips) : "");
+    setIsTeamFormOpen(true);
   };
 
   const cancelEditTeam = () => {
@@ -189,7 +219,6 @@ export function GameSetupPanel({
       </View>
 
       <View style={styles.setupSection}>
-        <Text style={styles.formLabel}>{editingTeamId ? "Edit team" : "Add team"}</Text>
         {teams.map((team) => (
           <View key={team.id} style={[styles.menuListItem, editingTeamId === team.id && { borderColor: colors.info }]}>
             <View style={[styles.legendDot, { backgroundColor: team.color }]} />
@@ -203,148 +232,173 @@ export function GameSetupPanel({
             </Pressable>
           </View>
         ))}
-        <TextInput
-          onChangeText={setTeamName}
-          placeholder="Team name"
-          placeholderTextColor="#8a94a6"
-          style={styles.menuInput}
-          value={teamName}
+        <SectionHeader
+          label={editingTeamId ? "Edit team" : "Add team"}
+          isOpen={isTeamFormOpen}
+          onToggle={() => setIsTeamFormOpen((v) => !v)}
         />
-        <View style={styles.colorSwatchRow}>
-          {TEAM_COLORS.map((color) => (
-            <Pressable
-              accessibilityLabel={`Use color ${color}`}
-              accessibilityRole="button"
-              key={color}
-              onPress={() => setTeamColor(color)}
-              style={[styles.colorSwatch, { backgroundColor: color }, teamColor === color && styles.colorSwatchSelected]}
+        {isTeamFormOpen ? (
+          <View style={{ gap: 8, marginTop: 4 }}>
+            <TextInput
+              onChangeText={setTeamName}
+              placeholder="Team name"
+              placeholderTextColor="#8a94a6"
+              style={styles.menuInput}
+              value={teamName}
             />
-          ))}
-        </View>
-        <TextInput
-          inputMode="numeric"
-          keyboardType="number-pad"
-          onChangeText={setTeamStartingChips}
-          placeholder="Starting chips"
-          placeholderTextColor="#8a94a6"
-          style={styles.menuInput}
-          value={teamStartingChips}
-        />
-        <PrimaryButton
-          disabled={isMutating}
-          icon={editingTeamId ? "save" : "group-add"}
-          label={editingTeamId ? "Save team" : "Add team"}
-          onPress={submitTeam}
-        />
-        {editingTeamId ? (
-          <Pressable onPress={cancelEditTeam} style={{ alignItems: "center", marginTop: 10 }}>
-            <Text style={{ color: colors.muted, fontSize: 14 }}>Cancel edit</Text>
-          </Pressable>
+            <View style={styles.colorSwatchRow}>
+              {TEAM_COLORS.map((color) => (
+                <Pressable
+                  accessibilityLabel={`Use color ${color}`}
+                  accessibilityRole="button"
+                  key={color}
+                  onPress={() => setTeamColor(color)}
+                  style={[styles.colorSwatch, { backgroundColor: color }, teamColor === color && styles.colorSwatchSelected]}
+                />
+              ))}
+            </View>
+            <TextInput
+              inputMode="numeric"
+              keyboardType="number-pad"
+              onChangeText={setTeamStartingChips}
+              placeholder="Starting chips"
+              placeholderTextColor="#8a94a6"
+              style={styles.menuInput}
+              value={teamStartingChips}
+            />
+            <PrimaryButton
+              disabled={isMutating}
+              icon={editingTeamId ? "save" : "group-add"}
+              label={editingTeamId ? "Save team" : "Add team"}
+              onPress={submitTeam}
+            />
+            {editingTeamId ? (
+              <Pressable onPress={cancelEditTeam} style={{ alignItems: "center", marginTop: 2 }}>
+                <Text style={{ color: colors.muted, fontSize: 14 }}>Cancel edit</Text>
+              </Pressable>
+            ) : null}
+          </View>
         ) : null}
       </View>
 
       <View style={styles.setupSection}>
-        <Text style={styles.formLabel}>Add station</Text>
-        <TextInput
-          onChangeText={setStationName}
-          placeholder="Station name"
-          placeholderTextColor="#8a94a6"
-          style={styles.menuInput}
-          value={stationName}
-        />
-        <View style={styles.setupCoordinateRow}>
-          <TextInput
-            inputMode="numeric"
-            keyboardType="number-pad"
-            onChangeText={setStationX}
-            placeholder="X"
-            placeholderTextColor="#8a94a6"
-            style={[styles.menuInput, styles.setupCoordinateInput]}
-            value={stationX}
-          />
-          <TextInput
-            inputMode="numeric"
-            keyboardType="number-pad"
-            onChangeText={setStationY}
-            placeholder="Y"
-            placeholderTextColor="#8a94a6"
-            style={[styles.menuInput, styles.setupCoordinateInput]}
-            value={stationY}
-          />
-        </View>
-        <PrimaryButton
-          disabled={isMutating}
-          icon="add-location-alt"
+        <SectionHeader
           label="Add station"
-          onPress={submitStation}
+          isOpen={isStationFormOpen}
+          onToggle={() => setIsStationFormOpen((v) => !v)}
         />
+        {isStationFormOpen ? (
+          <View style={{ gap: 8, marginTop: 4 }}>
+            <TextInput
+              onChangeText={setStationName}
+              placeholder="Station name"
+              placeholderTextColor="#8a94a6"
+              style={styles.menuInput}
+              value={stationName}
+            />
+            <View style={styles.setupCoordinateRow}>
+              <TextInput
+                inputMode="numeric"
+                keyboardType="number-pad"
+                onChangeText={setStationX}
+                placeholder="X"
+                placeholderTextColor="#8a94a6"
+                style={[styles.menuInput, styles.setupCoordinateInput]}
+                value={stationX}
+              />
+              <TextInput
+                inputMode="numeric"
+                keyboardType="number-pad"
+                onChangeText={setStationY}
+                placeholder="Y"
+                placeholderTextColor="#8a94a6"
+                style={[styles.menuInput, styles.setupCoordinateInput]}
+                value={stationY}
+              />
+            </View>
+            <PrimaryButton
+              disabled={isMutating}
+              icon="add-location-alt"
+              label="Add station"
+              onPress={submitStation}
+            />
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.setupSection}>
-        <Text style={styles.formLabel}>Add challenge</Text>
-        <TextInput
-          onChangeText={setChallengeName}
-          placeholder="Challenge name"
-          placeholderTextColor="#8a94a6"
-          style={styles.menuInput}
-          value={challengeName}
-        />
-        <TextInput
-          multiline
-          onChangeText={setChallengeDescription}
-          placeholder="Description"
-          placeholderTextColor="#8a94a6"
-          style={[styles.menuInput, styles.setupDescriptionInput]}
-          value={challengeDescription}
-        />
-        <TextInput
-          inputMode="numeric"
-          keyboardType="number-pad"
-          onChangeText={setChallengeChips}
-          placeholder="Chips / value"
-          placeholderTextColor="#8a94a6"
-          style={styles.menuInput}
-          value={challengeChips}
-        />
-        <View style={styles.colorSwatchRow}>
-          {CHALLENGE_TYPES.map((type) => (
-            <Pressable
-              accessibilityLabel={`Use challenge type ${type}`}
-              accessibilityRole="button"
-              key={type}
-              onPress={() => setChallengeType(type)}
-              style={[styles.teamOption, challengeType === type && styles.setupOptionSelected]}
-            >
-              <Text style={styles.teamOptionText}>{getChallengeTypeLabel(type)}</Text>
-            </Pressable>
-          ))}
-        </View>
-        <View style={styles.setupCoordinateRow}>
-          <TextInput
-            inputMode="numeric"
-            keyboardType="number-pad"
-            onChangeText={setChallengeX}
-            placeholder="X"
-            placeholderTextColor="#8a94a6"
-            style={[styles.menuInput, styles.setupCoordinateInput]}
-            value={challengeX}
-          />
-          <TextInput
-            inputMode="numeric"
-            keyboardType="number-pad"
-            onChangeText={setChallengeY}
-            placeholder="Y"
-            placeholderTextColor="#8a94a6"
-            style={[styles.menuInput, styles.setupCoordinateInput]}
-            value={challengeY}
-          />
-        </View>
-        <PrimaryButton
-          disabled={isMutating}
-          icon="add-task"
+        <SectionHeader
           label="Add challenge"
-          onPress={submitChallenge}
+          isOpen={isChallengeFormOpen}
+          onToggle={() => setIsChallengeFormOpen((v) => !v)}
         />
+        {isChallengeFormOpen ? (
+          <View style={{ gap: 8, marginTop: 4 }}>
+            <TextInput
+              onChangeText={setChallengeName}
+              placeholder="Challenge name"
+              placeholderTextColor="#8a94a6"
+              style={styles.menuInput}
+              value={challengeName}
+            />
+            <TextInput
+              multiline
+              onChangeText={setChallengeDescription}
+              placeholder="Description"
+              placeholderTextColor="#8a94a6"
+              style={[styles.menuInput, styles.setupDescriptionInput]}
+              value={challengeDescription}
+            />
+            <TextInput
+              inputMode="numeric"
+              keyboardType="number-pad"
+              onChangeText={setChallengeChips}
+              placeholder="Chips / value"
+              placeholderTextColor="#8a94a6"
+              style={styles.menuInput}
+              value={challengeChips}
+            />
+            <View style={styles.colorSwatchRow}>
+              {CHALLENGE_TYPES.map((type) => (
+                <Pressable
+                  accessibilityLabel={`Use challenge type ${type}`}
+                  accessibilityRole="button"
+                  key={type}
+                  onPress={() => setChallengeType(type)}
+                  style={[styles.teamOption, challengeType === type && styles.setupOptionSelected]}
+                >
+                  <Text style={styles.teamOptionText}>{getChallengeTypeLabel(type)}</Text>
+                </Pressable>
+              ))}
+            </View>
+            <View style={styles.setupCoordinateRow}>
+              <TextInput
+                inputMode="numeric"
+                keyboardType="number-pad"
+                onChangeText={setChallengeX}
+                placeholder="X"
+                placeholderTextColor="#8a94a6"
+                style={[styles.menuInput, styles.setupCoordinateInput]}
+                value={challengeX}
+              />
+              <TextInput
+                inputMode="numeric"
+                keyboardType="number-pad"
+                onChangeText={setChallengeY}
+                placeholder="Y"
+                placeholderTextColor="#8a94a6"
+                style={[styles.menuInput, styles.setupCoordinateInput]}
+                value={challengeY}
+              />
+            </View>
+            <PrimaryButton
+              disabled={isMutating}
+              icon="add-task"
+              label="Add challenge"
+              onPress={submitChallenge}
+            />
+          </View>
+        ) : null}
       </View>
     </View>
   );
