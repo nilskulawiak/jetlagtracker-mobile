@@ -8,7 +8,11 @@ import type {
   GameResponse,
   GamesResponse,
   GameState,
+  PatchChallengeRequest,
+  PatchStationRequest,
+  PatchTeamRequest,
   PresetSummaryResponse,
+  StartChallengeRequest,
   StartGameRequest,
 } from "@/types/game";
 
@@ -140,5 +144,59 @@ export function failChallenge(
   return request<void>(`/games/${gameId}/challenges/${challengeId}/fail`, {
     body: JSON.stringify(body),
     method: "POST",
+  });
+}
+
+export function startChallenge(
+  gameId: string,
+  challengeId: string,
+  body: StartChallengeRequest,
+) {
+  return request<void>(`/games/${gameId}/challenges/${challengeId}/start`, {
+    body: JSON.stringify(body),
+    method: "POST",
+  });
+}
+
+export function deleteChallenge(gameId: string, challengeId: string) {
+  return request<void>(`/games/${gameId}/challenges/${challengeId}`, {
+    method: "DELETE",
+  });
+}
+
+export function patchChallenge(
+  gameId: string,
+  challengeId: string,
+  body: PatchChallengeRequest,
+) {
+  return request<void>(`/games/${gameId}/challenges/${challengeId}`, {
+    body: JSON.stringify(body),
+    method: "PATCH",
+  });
+}
+
+export function deleteTeam(gameId: string, teamId: string) {
+  return request<void>(`/games/${gameId}/teams/${teamId}`, {
+    method: "DELETE",
+  });
+}
+
+export function patchTeam(gameId: string, teamId: string, body: PatchTeamRequest) {
+  return request<void>(`/games/${gameId}/teams/${teamId}`, {
+    body: JSON.stringify(body),
+    method: "PATCH",
+  });
+}
+
+export function deleteStation(gameId: string, stationId: string) {
+  return request<void>(`/games/${gameId}/stations/${stationId}`, {
+    method: "DELETE",
+  });
+}
+
+export function patchStation(gameId: string, stationId: string, body: PatchStationRequest) {
+  return request<void>(`/games/${gameId}/stations/${stationId}`, {
+    body: JSON.stringify(body),
+    method: "PATCH",
   });
 }

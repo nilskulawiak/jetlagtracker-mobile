@@ -2,7 +2,9 @@ export type GameStatus = "CREATED" | "STARTED" | "DONE";
 
 export type ChallengeStatus = "CREATED" | "AVAILABLE" | "DONE";
 
-export type ChallengeType = "CHIPS" | "MULTIPLIER" | "STEAL";
+export type ChallengeType = "CHIPS" | "MULTIPLIER" | "STEAL" | "CALL_YOUR_SHOT";
+
+export type ChallengeAttemptStatus = "IN_PROGRESS" | "SUCCESS" | "FAILED";
 
 export interface GameResponse {
   id: string;
@@ -81,6 +83,11 @@ export interface StationStateResponse {
   chips: StationChipStateResponse[];
 }
 
+export interface ChallengeAttemptResponse {
+  teamId: string;
+  status: ChallengeAttemptStatus;
+}
+
 export interface ChallengeResponse {
   id: string;
   name: string;
@@ -90,6 +97,34 @@ export interface ChallengeResponse {
   challengeType: ChallengeType;
   xCoordinate: number;
   yCoordinate: number;
+  challengeAttempts: ChallengeAttemptResponse[];
+}
+
+export interface StartChallengeRequest {
+  teamId: string;
+  callShot?: number;
+}
+
+export interface PatchChallengeRequest {
+  name?: string;
+  description?: string;
+  reward?: number;
+  status?: ChallengeStatus;
+  challengeType?: ChallengeType;
+  xCoordinate?: number;
+  yCoordinate?: number;
+}
+
+export interface PatchTeamRequest {
+  name?: string;
+  color?: string;
+  availableChips?: number;
+}
+
+export interface PatchStationRequest {
+  name?: string;
+  xCoordinate?: number;
+  yCoordinate?: number;
 }
 
 export interface GameActionResponse {
