@@ -11,6 +11,7 @@ import type { MapSelectableItem } from "@/utils/mapSelection";
 
 export function DesktopMapSidebar({
   actions,
+  isGameCreated,
   isWideLayout,
   nearbyItems,
   onSelectNearbyItem,
@@ -23,6 +24,7 @@ export function DesktopMapSidebar({
   teamsById,
 }: {
   actions: GameActionResponse[];
+  isGameCreated: boolean;
   isWideLayout: boolean;
   nearbyItems: MapSelectableItem[];
   onSelectNearbyItem: (item: MapSelectableItem) => void;
@@ -58,7 +60,7 @@ export function DesktopMapSidebar({
         />
         {renderInspector(false)}
       </ScrollView>
-      {isWideLayout ? (
+      {isWideLayout && !isGameCreated ? (
         <View style={mapStyles.actionLogPanel}>
           <View style={styles.panelHeader}>
             <Text style={mapStyles.actionLogTitle}>Action log</Text>

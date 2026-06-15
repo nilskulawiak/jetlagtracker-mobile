@@ -72,6 +72,7 @@ export function MobileGameLayout({
             actions={actions}
             challenges={challenges}
             gameState={gameState}
+            isGameCreated={isGameCreated}
             isMutating={isMutating || isGameCreated}
             onAddStationChips={gameActions.addStationChips}
             onCompleteChallenge={gameActions.completeChallenge}
@@ -109,7 +110,7 @@ export function MobileGameLayout({
             teams={teams}
           />
         </View>
-        <TabBar selectedTab={selectedTab} onSelectTab={setSelectedTab} />
+        <TabBar isGameCreated={isGameCreated} selectedTab={selectedTab} onSelectTab={setSelectedTab} />
       </>
     );
   }
@@ -124,17 +125,19 @@ export function MobileGameLayout({
         {selectedTab === "teams" ? (
           <TeamsScreen ownedStationCounts={ownedStationCounts} stations={stations} teams={teams} />
         ) : null}
-        {selectedTab === "log" ? <ActionLog actions={actions} /> : null}
+        {selectedTab === "log" && !isGameCreated ? <ActionLog actions={actions} /> : null}
       </ScrollView>
-      <TabBar selectedTab={selectedTab} onSelectTab={setSelectedTab} />
+      <TabBar isGameCreated={isGameCreated} selectedTab={selectedTab} onSelectTab={setSelectedTab} />
     </>
   );
 }
 
 function TabBar({
+  isGameCreated,
   selectedTab,
   onSelectTab,
 }: {
+  isGameCreated: boolean;
   selectedTab: Tab;
   onSelectTab: (tab: Tab) => void;
 }) {
@@ -142,7 +145,9 @@ function TabBar({
     <View style={[styles.tabBar, styles.mobileTabBar]}>
       <TabButton compact active={selectedTab === "map"} icon="map" label="Map" onPress={() => onSelectTab("map")} />
       <TabButton compact active={selectedTab === "teams"} icon="groups" label="Teams" onPress={() => onSelectTab("teams")} />
-      <TabButton compact active={selectedTab === "log"} icon="history" label="Log" onPress={() => onSelectTab("log")} />
+      {isGameCreated ? null : (
+        <TabButton compact active={selectedTab === "log"} icon="history" label="Log" onPress={() => onSelectTab("log")} />
+      )}
     </View>
   );
 }

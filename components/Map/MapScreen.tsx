@@ -25,6 +25,7 @@ export function MapScreen({
   actions,
   challenges,
   gameState,
+  isGameCreated,
   isMutating,
   onAddStationChips,
   onCompleteChallenge,
@@ -43,6 +44,7 @@ export function MapScreen({
 }: {
   actions: GameActionResponse[];
   challenges: ChallengeResponse[];
+  isGameCreated: boolean;
   gameState: GameState;
   isMutating: boolean;
   onAddStationChips: (stationId: string, body: { chips: number; teamId: string }) => Promise<void>;
@@ -170,6 +172,7 @@ export function MapScreen({
       {isMobileLayout ? null : (
         <DesktopMapSidebar
           actions={actions}
+          isGameCreated={isGameCreated}
           isWideLayout={isWideLayout}
           nearbyItems={nearbyItems}
           onSelectNearbyItem={selectNearbyItem}

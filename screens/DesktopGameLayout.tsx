@@ -55,6 +55,7 @@ export function DesktopGameLayout({
         actions={actions}
         challenges={challenges}
         gameState={gameState}
+        isGameCreated={isGameCreated}
         isMutating={isMutating || isGameCreated}
         onAddStationChips={gameActions.addStationChips}
         onCompleteChallenge={gameActions.completeChallenge}
