@@ -6,31 +6,23 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  RefreshControl,
-  ScrollView,
   Text,
   useWindowDimensions,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { ActionLog } from "@/components/ActionLog/ActionLog";
 import { TeamSelector } from "@/components/Inspector/TeamSelector";
-import { mapStyles } from "@/components/Map/mapStyles";
-import { MapScreen } from "@/components/Map/MapScreen";
 import { Pill } from "@/components/Shared/Pill";
 import { styles } from "@/components/Shared/styles";
-import { TabButton } from "@/components/Shared/TabButton";
-import { GameSetupPanel } from "@/components/Setup/GameSetupPanel";
-import { TeamsScreen } from "@/components/Teams/TeamsScreen";
 import { useGameActions } from "@/hooks/useGameActions";
 import { useGameSelection } from "@/hooks/useGameSelection";
 import { useGameState } from "@/hooks/useGameState";
 import { useSelectedTeam } from "@/hooks/useSelectedTeam";
+import { DesktopGameLayout } from "@/screens/DesktopGameLayout";
+import { MobileGameLayout } from "@/screens/MobileGameLayout";
 import { colors } from "@/utils/colors";
 import { getOwnedStationCounts } from "@/utils/gameSelectors";
-
-type Tab = "map" | "teams" | "log";
 
 export function GameScreen({
   initialGameId,
@@ -43,7 +35,6 @@ export function GameScreen({
 }) {
   const { width } = useWindowDimensions();
   const isMobileLayout = width < 700;
-  const [selectedTab, setSelectedTab] = useState<Tab>("map");
   const [showGameDetails, setShowGameDetails] = useState(false);
   const {
     error,
@@ -72,35 +63,24 @@ export function GameScreen({
   } = useGameSelection();
   const gameActions = useGameActions({ gameId, runMutation });
   const isGameCreated = gameState?.game.status === "CREATED";
-  const createdChallengeCount = challenges.filter((challenge) => challenge.status === "CREATED").length;
-  const showMapView = !isMobileLayout || selectedTab === "map";
-  const visibleError = (isMobileLayout ? null : mutationError) ?? error;
+  const createdChallengeCount = challenges.filter((c) => c.status === "CREATED").length;
 
-  const tabs = (
-    <View style={[styles.tabBar, isMobileLayout && styles.mobileTabBar]}>
-      <TabButton
-        active={selectedTab === "map"}
-        compact={isMobileLayout}
-        icon="map"
-        label="Map"
-        onPress={() => setSelectedTab("map")}
-      />
-      <TabButton
-        active={selectedTab === "teams"}
-        compact={isMobileLayout}
-        icon="groups"
-        label="Teams"
-        onPress={() => setSelectedTab("teams")}
-      />
-      <TabButton
-        active={selectedTab === "log"}
-        compact={isMobileLayout}
-        icon="history"
-        label="Log"
-        onPress={() => setSelectedTab("log")}
-      />
-    </View>
-  );
+  const sharedLayoutProps = {
+    actions,
+    challenges,
+    clearMapSelection,
+    createdChallengeCount,
+    gameActions,
+    isGameCreated,
+    isMutating,
+    selectChallenge,
+    selectedChallengeId,
+    selectedStationId,
+    selectedTeamId,
+    selectStation,
+    stations,
+    teams,
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -132,7 +112,7 @@ export function GameScreen({
                 accessibilityLabel="Game details"
                 accessibilityRole="button"
                 accessibilityState={{ expanded: showGameDetails }}
-                onPress={() => setShowGameDetails((value) => !value)}
+                onPress={() => setShowGameDetails((v) => !v)}
                 style={[styles.iconButton, isMobileLayout && styles.mobileIconButton, showGameDetails && styles.iconButtonActive]}
               >
                 <MaterialIcons color={showGameDetails ? colors.panel : colors.ink} name="tune" size={isMobileLayout ? 20 : 22} />
@@ -160,10 +140,10 @@ export function GameScreen({
                     <TeamSelector
                       compact
                       disabled={isMutating}
-                    selectedTeamId={selectedTeamId}
-                    teams={teams}
-                    onSelect={setSelectedTeamId}
-                  />
+                      selectedTeamId={selectedTeamId}
+                      teams={teams}
+                      onSelect={setSelectedTeamId}
+                    />
                   </View>
                 ) : null}
               </View>
@@ -181,71 +161,24 @@ export function GameScreen({
             <MaterialIcons color={colors.danger} name="error-outline" size={32} />
             <Text style={styles.errorText}>{error}</Text>
           </View>
-        ) : showMapView && gameState ? (
-          <View
-            style={[
-              mapStyles.content,
-              !isMobileLayout && mapStyles.desktopContent,
-              isMobileLayout && mapStyles.mobileContent,
-            ]}
-          >
-            {visibleError ? <Text style={styles.inlineError}>{visibleError}</Text> : null}
-            <MapScreen
-              actions={actions}
-              challenges={challenges}
+        ) : gameState ? (
+          isMobileLayout ? (
+            <MobileGameLayout
+              {...sharedLayoutProps}
+              error={error}
               gameState={gameState}
-              isMutating={isMutating || isGameCreated}
-              onAddStationChips={gameActions.addStationChips}
-              onCompleteChallenge={gameActions.completeChallenge}
-              onFailChallenge={gameActions.failChallenge}
-              onStartChallenge={gameActions.startChallenge}
-              onClearSelection={clearMapSelection}
-              onHoverChange={() => undefined}
-              onSelectChallenge={selectChallenge}
-              onSelectStation={selectStation}
-              selectedChallengeId={selectedChallengeId}
-              selectedStationId={selectedStationId}
-              selectedTeamId={selectedTeamId}
-              setupPanel={
-                isGameCreated ? (
-                  <GameSetupPanel
-                    challengeCount={createdChallengeCount}
-                    challenges={challenges}
-                    isMutating={isMutating}
-                    onCreateChallenge={gameActions.createChallenge}
-                    onCreateStation={gameActions.createStation}
-                    onCreateTeam={gameActions.createTeam}
-                    onDeleteChallenge={gameActions.deleteChallenge}
-                    onDeleteStation={gameActions.deleteStation}
-                    onDeleteTeam={gameActions.deleteTeam}
-                    onPatchChallenge={gameActions.patchChallenge}
-                    onPatchStation={gameActions.patchStation}
-                    onPatchTeam={gameActions.patchTeam}
-                    onStartGame={gameActions.startGame}
-                    stations={stations}
-                    teams={teams}
-                  />
-                ) : undefined
-              }
-              stations={stations}
-              teams={teams}
+              isLoading={isLoading}
+              loadGameState={loadGameState}
+              ownedStationCounts={ownedStationCounts}
             />
-          </View>
-        ) : (
-          <ScrollView
-            contentContainerStyle={styles.content}
-            refreshControl={<RefreshControl refreshing={isLoading} onRefresh={loadGameState} />}
-          >
-            {visibleError ? <Text style={styles.inlineError}>{visibleError}</Text> : null}
-
-            {selectedTab === "teams" ? (
-              <TeamsScreen ownedStationCounts={ownedStationCounts} stations={stations} teams={teams} />
-            ) : null}
-
-            {selectedTab === "log" ? <ActionLog actions={actions} /> : null}
-          </ScrollView>
-        )}
-        {isMobileLayout ? tabs : null}
+          ) : (
+            <DesktopGameLayout
+              {...sharedLayoutProps}
+              gameState={gameState}
+              mutationError={mutationError}
+            />
+          )
+        ) : null}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
