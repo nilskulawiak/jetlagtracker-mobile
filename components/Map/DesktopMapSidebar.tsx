@@ -42,7 +42,11 @@ export function DesktopMapSidebar({
       ]}
     >
       {isWideLayout ? <TeamSummary stations={stations} teams={teams} /> : null}
-      <View style={mapStyles.inspectorPanelWide}>
+      <ScrollView
+        contentContainerStyle={mapStyles.inspectorPanelWide}
+        showsVerticalScrollIndicator={false}
+        style={mapStyles.inspectorScroller}
+      >
         {setupPanel}
         <NearbyItemsPicker
           items={nearbyItems}
@@ -53,7 +57,7 @@ export function DesktopMapSidebar({
           teamsById={teamsById}
         />
         {renderInspector(false)}
-      </View>
+      </ScrollView>
       {isWideLayout ? (
         <View style={mapStyles.actionLogPanel}>
           <View style={styles.panelHeader}>

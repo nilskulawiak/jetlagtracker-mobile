@@ -210,11 +210,20 @@ export function GameScreen({
                 isGameCreated ? (
                   <GameSetupPanel
                     challengeCount={createdChallengeCount}
+                    challenges={challenges}
                     isMutating={isMutating}
                     onCreateChallenge={gameActions.createChallenge}
                     onCreateStation={gameActions.createStation}
                     onCreateTeam={gameActions.createTeam}
+                    onDeleteChallenge={gameActions.deleteChallenge}
+                    onDeleteStation={gameActions.deleteStation}
+                    onDeleteTeam={gameActions.deleteTeam}
+                    onPatchChallenge={gameActions.patchChallenge}
+                    onPatchStation={gameActions.patchStation}
+                    onPatchTeam={gameActions.patchTeam}
                     onStartGame={gameActions.startGame}
+                    stations={stations}
+                    teams={teams}
                   />
                 ) : undefined
               }
