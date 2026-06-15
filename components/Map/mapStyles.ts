@@ -48,10 +48,8 @@ export const mapStyles = StyleSheet.create({
     padding: 16,
   },
   desktopContent: {
-    alignSelf: "center",
-    maxWidth: 1840,
-    paddingHorizontal: 12,
-    width: "100%",
+    paddingHorizontal: 0,
+    paddingRight: 12,
   },
   fitButton: {
     alignItems: "center",
