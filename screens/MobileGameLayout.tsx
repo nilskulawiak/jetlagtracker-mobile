@@ -73,10 +73,14 @@ export function MobileGameLayout({
             challenges={challenges}
             gameState={gameState}
             isGameCreated={isGameCreated}
-            isMutating={isMutating || isGameCreated}
+            isMutating={isMutating}
             onAddStationChips={gameActions.addStationChips}
             onCompleteChallenge={gameActions.completeChallenge}
+            onDeleteChallenge={gameActions.deleteChallenge}
+            onDeleteStation={gameActions.deleteStation}
             onFailChallenge={gameActions.failChallenge}
+            onPatchChallenge={gameActions.patchChallenge}
+            onPatchStation={gameActions.patchStation}
             onStartChallenge={gameActions.startChallenge}
             onClearSelection={clearMapSelection}
             onHoverChange={() => undefined}
@@ -89,19 +93,13 @@ export function MobileGameLayout({
               isGameCreated ? (
                 <GameSetupPanel
                   challengeCount={createdChallengeCount}
-                  challenges={challenges}
                   isMutating={isMutating}
                   onCreateChallenge={gameActions.createChallenge}
                   onCreateStation={gameActions.createStation}
                   onCreateTeam={gameActions.createTeam}
-                  onDeleteChallenge={gameActions.deleteChallenge}
-                  onDeleteStation={gameActions.deleteStation}
                   onDeleteTeam={gameActions.deleteTeam}
-                  onPatchChallenge={gameActions.patchChallenge}
-                  onPatchStation={gameActions.patchStation}
                   onPatchTeam={gameActions.patchTeam}
                   onStartGame={gameActions.startGame}
-                  stations={stations}
                   teams={teams}
                 />
               ) : undefined

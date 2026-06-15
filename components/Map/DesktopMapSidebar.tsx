@@ -43,7 +43,7 @@ export function DesktopMapSidebar({
         isWideLayout ? mapStyles.inspectorShellWide : mapStyles.inspectorShellCompact,
       ]}
     >
-      {isWideLayout ? <TeamSummary stations={stations} teams={teams} /> : null}
+      {isWideLayout && !isGameCreated ? <TeamSummary stations={stations} teams={teams} /> : null}
       <ScrollView
         contentContainerStyle={mapStyles.inspectorPanelWide}
         showsVerticalScrollIndicator={false}

@@ -14,6 +14,8 @@ import type {
   ChallengeResponse,
   GameActionResponse,
   GameState,
+  PatchChallengeRequest,
+  PatchStationRequest,
   StartChallengeRequest,
   StationStateResponse,
   TeamResponse,
@@ -29,7 +31,11 @@ export function MapScreen({
   isMutating,
   onAddStationChips,
   onCompleteChallenge,
+  onDeleteChallenge,
+  onDeleteStation,
   onFailChallenge,
+  onPatchChallenge,
+  onPatchStation,
   onStartChallenge,
   onHoverChange,
   onClearSelection,
@@ -49,7 +55,11 @@ export function MapScreen({
   isMutating: boolean;
   onAddStationChips: (stationId: string, body: { chips: number; teamId: string }) => Promise<void>;
   onCompleteChallenge: (challengeId: string, body: { teamId: string }) => Promise<void>;
+  onDeleteChallenge: (id: string) => Promise<void>;
+  onDeleteStation: (id: string) => Promise<void>;
   onFailChallenge: (challengeId: string, body: { teamId: string }) => Promise<void>;
+  onPatchChallenge: (id: string, body: PatchChallengeRequest) => Promise<void>;
+  onPatchStation: (id: string, body: PatchStationRequest) => Promise<void>;
   onStartChallenge: (challengeId: string, body: StartChallengeRequest) => Promise<void>;
   onClearSelection: () => void;
   onHoverChange: (isHovered: boolean) => void;
@@ -95,10 +105,15 @@ export function MapScreen({
     <Inspector
       challenge={selectedChallenge}
       hideHeader={hideHeader}
+      isGameCreated={isGameCreated}
       isMutating={isMutating}
       onAddStationChips={onAddStationChips}
       onCompleteChallenge={onCompleteChallenge}
+      onDeleteChallenge={onDeleteChallenge}
+      onDeleteStation={onDeleteStation}
       onFailChallenge={onFailChallenge}
+      onPatchChallenge={onPatchChallenge}
+      onPatchStation={onPatchStation}
       onStartChallenge={onStartChallenge}
       selectedTeamId={selectedTeamId}
       station={selectedStation}

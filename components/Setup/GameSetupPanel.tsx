@@ -1,82 +1,39 @@
 import { useState } from "react";
-import { Alert, Platform, Pressable, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, Text, TextInput, View } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 
 import { PrimaryButton } from "@/components/Shared/Buttons";
 import { styles } from "@/components/Shared/styles";
 import type {
-  ChallengeResponse,
-  ChallengeType,
   CreateChallengeRequest,
   CreateStationRequest,
   CreateTeamRequest,
-  PatchChallengeRequest,
-  PatchStationRequest,
   PatchTeamRequest,
-  StationStateResponse,
   TeamResponse,
 } from "@/types/game";
 import { colors } from "@/utils/colors";
 import { getChallengeTypeLabel } from "@/utils/challengeDisplay";
-
-const TEAM_COLORS = ["#d92d20", "#1570ef", "#039855", "#dc6803", "#7f56d9", "#0891b2"];
-const CHALLENGE_TYPES: ChallengeType[] = ["CHIPS", "MULTIPLIER", "STEAL", "CALL_YOUR_SHOT"];
-
-function parsePositiveInteger(value: string, label: string) {
-  const parsed = Number(value);
-
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    Alert.alert(label, `${label} must be a positive whole number.`);
-    return null;
-  }
-
-  return parsed;
-}
-
-function confirmDelete(name: string, onConfirm: () => void) {
-  if (Platform.OS === "web") {
-    if (window.confirm(`Delete "${name}"?`)) {
-      onConfirm();
-    }
-    return;
-  }
-  Alert.alert("Delete", `Delete "${name}"?`, [
-    { text: "Cancel", style: "cancel" },
-    { text: "Delete", style: "destructive", onPress: onConfirm },
-  ]);
-}
+import { CHALLENGE_TYPES, TEAM_COLORS, confirmDelete, parsePositiveInteger } from "@/utils/setupHelpers";
 
 export function GameSetupPanel({
   challengeCount,
-  challenges,
   isMutating,
   onCreateChallenge,
   onCreateStation,
   onCreateTeam,
-  onDeleteChallenge,
-  onDeleteStation,
   onDeleteTeam,
-  onPatchChallenge,
-  onPatchStation,
   onPatchTeam,
   onStartGame,
-  stations,
   teams,
 }: {
   challengeCount: number;
-  challenges: ChallengeResponse[];
   isMutating: boolean;
   onCreateChallenge: (body: CreateChallengeRequest) => Promise<void>;
   onCreateStation: (body: CreateStationRequest) => Promise<void>;
   onCreateTeam: (body: CreateTeamRequest) => Promise<void>;
-  onDeleteChallenge: (challengeId: string) => Promise<void>;
-  onDeleteStation: (stationId: string) => Promise<void>;
   onDeleteTeam: (teamId: string) => Promise<void>;
-  onPatchChallenge: (challengeId: string, body: PatchChallengeRequest) => Promise<void>;
-  onPatchStation: (stationId: string, body: PatchStationRequest) => Promise<void>;
   onPatchTeam: (teamId: string, body: PatchTeamRequest) => Promise<void>;
   onStartGame: (body: { numberOfChallenges: number }) => Promise<void>;
-  stations: StationStateResponse[];
   teams: TeamResponse[];
 }) {
   const [numberOfChallenges, setNumberOfChallenges] = useState(String(Math.max(1, Math.min(3, challengeCount || 1))));
@@ -86,16 +43,14 @@ export function GameSetupPanel({
   const [teamName, setTeamName] = useState("");
   const [teamStartingChips, setTeamStartingChips] = useState("");
 
-  const [editingStationId, setEditingStationId] = useState<string | null>(null);
   const [stationName, setStationName] = useState("");
   const [stationX, setStationX] = useState("");
   const [stationY, setStationY] = useState("");
 
-  const [editingChallengeId, setEditingChallengeId] = useState<string | null>(null);
   const [challengeName, setChallengeName] = useState("");
   const [challengeDescription, setChallengeDescription] = useState("");
   const [challengeChips, setChallengeChips] = useState("");
-  const [challengeType, setChallengeType] = useState<ChallengeType>("CHIPS");
+  const [challengeType, setChallengeType] = useState(CHALLENGE_TYPES[0]);
   const [challengeX, setChallengeX] = useState("");
   const [challengeY, setChallengeY] = useState("");
 
@@ -153,63 +108,20 @@ export function GameSetupPanel({
     confirmDelete(team.name, () => onDeleteTeam(team.id));
   };
 
-  // Station helpers
-  const enterEditStation = (station: StationStateResponse) => {
-    setEditingStationId(station.id);
-    setStationName(station.name);
-    setStationX(String(station.xCoordinate));
-    setStationY(String(station.yCoordinate));
-  };
-
-  const cancelEditStation = () => {
-    setEditingStationId(null);
-    setStationName("");
-    setStationX("");
-    setStationY("");
-  };
-
+  // Station submit (create only)
   const submitStation = async () => {
     const trimmedName = stationName.trim();
     const xCoordinate = parsePositiveInteger(stationX, "Station x coordinate");
     const yCoordinate = parsePositiveInteger(stationY, "Station y coordinate");
     if (!trimmedName) { Alert.alert("Station name", "Enter a station name."); return; }
     if (xCoordinate === null || yCoordinate === null) return;
-
-    if (editingStationId) {
-      await onPatchStation(editingStationId, { name: trimmedName, xCoordinate, yCoordinate });
-      setEditingStationId(null);
-    } else {
-      await onCreateStation({ name: trimmedName, xCoordinate, yCoordinate });
-    }
+    await onCreateStation({ name: trimmedName, xCoordinate, yCoordinate });
     setStationName("");
     setStationX("");
     setStationY("");
   };
 
-  const handleDeleteStation = (station: StationStateResponse) => {
-    confirmDelete(station.name, () => onDeleteStation(station.id));
-  };
-
-  // Challenge helpers
-  const enterEditChallenge = (challenge: ChallengeResponse) => {
-    setEditingChallengeId(challenge.id);
-    setChallengeName(challenge.name);
-    setChallengeDescription(challenge.description);
-    setChallengeChips(String(challenge.reward));
-    setChallengeType(challenge.challengeType);
-    setChallengeX(String(challenge.xCoordinate));
-    setChallengeY(String(challenge.yCoordinate));
-  };
-
-  const cancelEditChallenge = () => {
-    setEditingChallengeId(null);
-    setChallengeName("");
-    setChallengeDescription("");
-    setChallengeChips("");
-    setChallengeX("");
-    setChallengeY("");
-  };
-
+  // Challenge submit (create only)
   const submitChallenge = async () => {
     const trimmedName = challengeName.trim();
     const trimmedDescription = challengeDescription.trim();
@@ -219,37 +131,20 @@ export function GameSetupPanel({
     if (!trimmedName) { Alert.alert("Challenge name", "Enter a challenge name."); return; }
     if (!trimmedDescription) { Alert.alert("Challenge description", "Enter a challenge description."); return; }
     if (reward === null || xCoordinate === null || yCoordinate === null) return;
-
-    if (editingChallengeId) {
-      await onPatchChallenge(editingChallengeId, {
-        name: trimmedName,
-        description: trimmedDescription,
-        reward,
-        challengeType,
-        xCoordinate,
-        yCoordinate,
-      });
-      setEditingChallengeId(null);
-    } else {
-      await onCreateChallenge({
-        reward,
-        challengeType,
-        description: trimmedDescription,
-        name: trimmedName,
-        status: "CREATED",
-        xCoordinate,
-        yCoordinate,
-      });
-    }
+    await onCreateChallenge({
+      reward,
+      challengeType,
+      description: trimmedDescription,
+      name: trimmedName,
+      status: "CREATED",
+      xCoordinate,
+      yCoordinate,
+    });
     setChallengeName("");
     setChallengeDescription("");
     setChallengeChips("");
     setChallengeX("");
     setChallengeY("");
-  };
-
-  const handleDeleteChallenge = (challenge: ChallengeResponse) => {
-    confirmDelete(challenge.name, () => onDeleteChallenge(challenge.id));
   };
 
   return (
@@ -349,20 +244,7 @@ export function GameSetupPanel({
       </View>
 
       <View style={styles.setupSection}>
-        <Text style={styles.formLabel}>{editingStationId ? "Edit station" : "Add station"}</Text>
-        {stations.map((station) => (
-          <View key={station.id} style={[styles.menuListItem, editingStationId === station.id && { borderColor: colors.info }]}>
-            <MaterialIcons color={colors.muted} name="place" size={18} />
-            <Text style={[styles.chipText, { flex: 1 }]}>{station.name}</Text>
-            <Text style={styles.chipValue}>{station.xCoordinate}, {station.yCoordinate}</Text>
-            <Pressable disabled={isMutating} onPress={() => enterEditStation(station)} style={{ padding: 6 }}>
-              <MaterialIcons color={colors.ink} name="edit" size={18} />
-            </Pressable>
-            <Pressable disabled={isMutating} onPress={() => handleDeleteStation(station)} style={{ padding: 6 }}>
-              <MaterialIcons color={colors.danger} name="delete" size={18} />
-            </Pressable>
-          </View>
-        ))}
+        <Text style={styles.formLabel}>Add station</Text>
         <TextInput
           onChangeText={setStationName}
           placeholder="Station name"
@@ -392,32 +274,14 @@ export function GameSetupPanel({
         </View>
         <PrimaryButton
           disabled={isMutating}
-          icon={editingStationId ? "save" : "add-location-alt"}
-          label={editingStationId ? "Save station" : "Add station"}
+          icon="add-location-alt"
+          label="Add station"
           onPress={submitStation}
         />
-        {editingStationId ? (
-          <Pressable onPress={cancelEditStation} style={{ alignItems: "center", marginTop: 10 }}>
-            <Text style={{ color: colors.muted, fontSize: 14 }}>Cancel edit</Text>
-          </Pressable>
-        ) : null}
       </View>
 
       <View style={styles.setupSection}>
-        <Text style={styles.formLabel}>{editingChallengeId ? "Edit challenge" : "Add challenge"}</Text>
-        {challenges.map((challenge) => (
-          <View key={challenge.id} style={[styles.menuListItem, editingChallengeId === challenge.id && { borderColor: colors.info }]}>
-            <MaterialIcons color={colors.muted} name="emoji-events" size={18} />
-            <Text style={[styles.chipText, { flex: 1 }]}>{challenge.name}</Text>
-            <Text style={styles.chipValue}>{getChallengeTypeLabel(challenge.challengeType)}</Text>
-            <Pressable disabled={isMutating} onPress={() => enterEditChallenge(challenge)} style={{ padding: 6 }}>
-              <MaterialIcons color={colors.ink} name="edit" size={18} />
-            </Pressable>
-            <Pressable disabled={isMutating} onPress={() => handleDeleteChallenge(challenge)} style={{ padding: 6 }}>
-              <MaterialIcons color={colors.danger} name="delete" size={18} />
-            </Pressable>
-          </View>
-        ))}
+        <Text style={styles.formLabel}>Add challenge</Text>
         <TextInput
           onChangeText={setChallengeName}
           placeholder="Challenge name"
@@ -477,15 +341,10 @@ export function GameSetupPanel({
         </View>
         <PrimaryButton
           disabled={isMutating}
-          icon={editingChallengeId ? "save" : "add-task"}
-          label={editingChallengeId ? "Save challenge" : "Add challenge"}
+          icon="add-task"
+          label="Add challenge"
           onPress={submitChallenge}
         />
-        {editingChallengeId ? (
-          <Pressable onPress={cancelEditChallenge} style={{ alignItems: "center", marginTop: 10 }}>
-            <Text style={{ color: colors.muted, fontSize: 14 }}>Cancel edit</Text>
-          </Pressable>
-        ) : null}
       </View>
     </View>
   );

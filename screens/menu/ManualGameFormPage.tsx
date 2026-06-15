@@ -7,6 +7,7 @@ import { PageLayout } from "@/components/Shared/PageLayout";
 import { styles } from "@/components/Shared/styles";
 import { colors } from "@/utils/colors";
 import { AVAILABLE_MAPS } from "@/utils/mapAssets";
+import { TEAM_COLORS } from "@/utils/setupHelpers";
 
 type DraftTeam = {
   id: string;
@@ -14,8 +15,6 @@ type DraftTeam = {
   name: string;
   startingChips: string;
 };
-
-const TEAM_COLORS = ["#d92d20", "#1570ef", "#039855", "#dc6803", "#7f56d9", "#0891b2"];
 
 function newDraftTeam(index: number): DraftTeam {
   return {
