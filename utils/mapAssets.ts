@@ -1,5 +1,16 @@
 import type { ImageSourcePropType } from "react-native";
 
+export type MapDefinition = {
+  id: string;
+  name: string;
+  mapWidth: number;
+  mapHeight: number;
+};
+
+export const AVAILABLE_MAPS: MapDefinition[] = [
+  { id: "taiwan", name: "Taiwan", mapWidth: 953, mapHeight: 1079 },
+];
+
 const mapImages: Record<string, ImageSourcePropType> = {
   taiwan: require("@/assets/images/taiwan.png"),
   "taiwan.png": require("@/assets/images/taiwan.png"),

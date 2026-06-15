@@ -3,11 +3,12 @@ import { useState } from "react";
 import type { PresetSummaryResponse } from "@/types/game";
 import { ContinueGamePage } from "./menu/ContinueGamePage";
 import { HomePage } from "./menu/HomePage";
+import { ManualGameFormPage } from "./menu/ManualGameFormPage";
 import { PresetFormPage } from "./menu/PresetFormPage";
 import { PresetsPage } from "./menu/PresetsPage";
 import { SettingsPage } from "./menu/SettingsPage";
 
-type MenuMode = "home" | "continue" | "presets" | "presetForm" | "settings";
+type MenuMode = "home" | "continue" | "manualForm" | "presets" | "presetForm" | "settings";
 
 export function MenuScreen({ onOpenGame }: { onOpenGame: (gameId: string) => void }) {
   const [mode, setMode] = useState<MenuMode>("home");
@@ -17,8 +18,18 @@ export function MenuScreen({ onOpenGame }: { onOpenGame: (gameId: string) => voi
     return (
       <HomePage
         onContinueGame={() => setMode("continue")}
+        onCreateManually={() => setMode("manualForm")}
         onCreateFromPreset={() => setMode("presets")}
         onSettings={() => setMode("settings")}
+      />
+    );
+  }
+
+  if (mode === "manualForm") {
+    return (
+      <ManualGameFormPage
+        onBack={() => setMode("home")}
+        onGameCreated={onOpenGame}
       />
     );
   }

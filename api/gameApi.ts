@@ -2,6 +2,7 @@ import Constants from "expo-constants";
 
 import type {
   CreateGameFromPresetRequest,
+  CreateGameRequest,
   CreateChallengeRequest,
   CreateStationRequest,
   CreateTeamRequest,
@@ -77,6 +78,13 @@ export function getGames() {
 
 export function getPresets() {
   return request<PresetSummaryResponse[]>("/preset");
+}
+
+export function createGame(body: CreateGameRequest) {
+  return request<GameResponse>("/games", {
+    body: JSON.stringify(body),
+    method: "POST",
+  });
 }
 
 export function createGameFromPreset(body: CreateGameFromPresetRequest) {

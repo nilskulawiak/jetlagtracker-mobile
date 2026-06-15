@@ -7,10 +7,12 @@ import { PageLayout } from "@/components/Shared/PageLayout";
 
 export function HomePage({
   onContinueGame,
+  onCreateManually,
   onCreateFromPreset,
   onSettings,
 }: {
   onContinueGame: () => void;
+  onCreateManually: () => void;
   onCreateFromPreset: () => void;
   onSettings: () => void;
 }) {
@@ -21,7 +23,7 @@ export function HomePage({
         <View style={styles.panel}>
           <Text style={styles.panelTitle}>Create game</Text>
           <View style={styles.menuButtonStack}>
-            <MenuButton icon="edit" label="Create game manually" onPress={() => undefined} />
+            <MenuButton icon="edit" label="Create game manually" onPress={onCreateManually} />
             <MenuButton icon="auto-awesome" label="Create game from preset" onPress={onCreateFromPreset} />
           </View>
         </View>

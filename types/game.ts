@@ -36,6 +36,13 @@ export interface StartGameRequest {
   numberOfChallenges: number;
 }
 
+export interface CreateGameRequest {
+  name: string;
+  mapImage: string;
+  mapWidth: number;
+  mapHeight: number;
+}
+
 export interface CreateGameFromPresetRequest {
   presetId: string;
   name: string;
