@@ -5,7 +5,7 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import { PrimaryButton, SecondaryButton } from "@/components/Shared/Buttons";
 import { Stat } from "@/components/Shared/Stat";
 import { styles } from "@/components/Shared/styles";
-import type { ChallengeResponse, StartChallengeRequest } from "@/types/game";
+import type { ChallengeResponse, FinishChallengeRequest, StartChallengeRequest } from "@/types/game";
 import { getChallengeStatusColor, isChallengeDone } from "@/utils/colors";
 import { getChallengeValueLabel } from "@/utils/challengeDisplay";
 import { colors } from "@/utils/colors";
@@ -22,8 +22,8 @@ export function ChallengeInspector({
   challenge: ChallengeResponse;
   hideHeader?: boolean;
   isMutating: boolean;
-  onCompleteChallenge: (challengeId: string, body: { teamId: string }) => Promise<void>;
-  onFailChallenge: (challengeId: string, body: { teamId: string }) => Promise<void>;
+  onCompleteChallenge: (challengeId: string, body: FinishChallengeRequest) => Promise<void>;
+  onFailChallenge: (challengeId: string, body: FinishChallengeRequest) => Promise<void>;
   onStartChallenge: (challengeId: string, body: StartChallengeRequest) => Promise<void>;
   selectedTeamId: string;
 }) {
@@ -39,12 +39,12 @@ export function ChallengeInspector({
   const showCompleteFailButtons = isInProgress && !isGloballyDone;
   const actionsDisabled = isMutating || !selectedTeamId;
 
-  const handleStart = () => {
-    const body: StartChallengeRequest = { teamId: selectedTeamId };
+  const handleComplete = () => {
+    const body: FinishChallengeRequest = { teamId: selectedTeamId };
     if (challenge.challengeType === "CALL_YOUR_SHOT") {
       body.callShot = callShot;
     }
-    onStartChallenge(challenge.id, body);
+    onCompleteChallenge(challenge.id, body);
   };
 
   return (
@@ -72,6 +72,17 @@ export function ChallengeInspector({
       </View>
 
       {showStartButton ? (
+        <View style={styles.actionRow}>
+          <PrimaryButton
+            disabled={actionsDisabled}
+            icon="play-arrow"
+            label={isMutating ? "Saving..." : "Start"}
+            onPress={() => onStartChallenge(challenge.id, { teamId: selectedTeamId })}
+          />
+        </View>
+      ) : null}
+
+      {showCompleteFailButtons ? (
         <>
           {challenge.challengeType === "CALL_YOUR_SHOT" ? (
             <>
@@ -103,29 +114,18 @@ export function ChallengeInspector({
           <View style={styles.actionRow}>
             <PrimaryButton
               disabled={actionsDisabled}
-              icon="play-arrow"
-              label={isMutating ? "Saving..." : "Start"}
-              onPress={handleStart}
+              icon="check-circle"
+              label={isMutating ? "Saving..." : "Complete"}
+              onPress={handleComplete}
+            />
+            <SecondaryButton
+              disabled={actionsDisabled}
+              icon="cancel"
+              label="Fail"
+              onPress={() => onFailChallenge(challenge.id, { teamId: selectedTeamId })}
             />
           </View>
         </>
-      ) : null}
-
-      {showCompleteFailButtons ? (
-        <View style={styles.actionRow}>
-          <PrimaryButton
-            disabled={actionsDisabled}
-            icon="check-circle"
-            label={isMutating ? "Saving..." : "Complete"}
-            onPress={() => onCompleteChallenge(challenge.id, { teamId: selectedTeamId })}
-          />
-          <SecondaryButton
-            disabled={actionsDisabled}
-            icon="cancel"
-            label="Fail"
-            onPress={() => onFailChallenge(challenge.id, { teamId: selectedTeamId })}
-          />
-        </View>
       ) : null}
     </View>
   );

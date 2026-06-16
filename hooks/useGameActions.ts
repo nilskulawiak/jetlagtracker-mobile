@@ -18,6 +18,7 @@ import type {
   CreateChallengeRequest,
   CreateStationRequest,
   CreateTeamRequest,
+  FinishChallengeRequest,
   PatchChallengeRequest,
   PatchStationRequest,
   PatchTeamRequest,
@@ -37,7 +38,7 @@ export function useGameActions({
   return {
     addStationChips: (stationId: string, body: { chips: number; teamId: string }) =>
       runMutation(() => addStationChips(normalizedGameId, stationId, body)),
-    completeChallenge: (challengeId: string, body: { teamId: string }) =>
+    completeChallenge: (challengeId: string, body: FinishChallengeRequest) =>
       runMutation(() => completeChallenge(normalizedGameId, challengeId, body)),
     createChallenge: (body: CreateChallengeRequest) =>
       runMutation(() => createChallenge(normalizedGameId, body)),
@@ -45,7 +46,7 @@ export function useGameActions({
       runMutation(() => createStation(normalizedGameId, body)),
     createTeam: (body: CreateTeamRequest) =>
       runMutation(() => createTeam(normalizedGameId, body)),
-    failChallenge: (challengeId: string, body: { teamId: string }) =>
+    failChallenge: (challengeId: string, body: FinishChallengeRequest) =>
       runMutation(() => failChallenge(normalizedGameId, challengeId, body)),
     deleteChallenge: (challengeId: string) =>
       runMutation(() => deleteChallenge(normalizedGameId, challengeId)),

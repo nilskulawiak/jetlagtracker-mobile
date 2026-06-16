@@ -6,6 +6,7 @@ import { StationInspector } from "@/components/Inspector/StationInspector";
 import { styles } from "@/components/Shared/styles";
 import type {
   ChallengeResponse,
+  FinishChallengeRequest,
   PatchChallengeRequest,
   PatchStationRequest,
   StartChallengeRequest,
@@ -38,10 +39,10 @@ export function Inspector({
   isGameCreated: boolean;
   isMutating: boolean;
   onAddStationChips: (stationId: string, body: { chips: number; teamId: string }) => Promise<void>;
-  onCompleteChallenge: (challengeId: string, body: { teamId: string }) => Promise<void>;
+  onCompleteChallenge: (challengeId: string, body: FinishChallengeRequest) => Promise<void>;
   onDeleteChallenge: (id: string) => Promise<void>;
   onDeleteStation: (id: string) => Promise<void>;
-  onFailChallenge: (challengeId: string, body: { teamId: string }) => Promise<void>;
+  onFailChallenge: (challengeId: string, body: FinishChallengeRequest) => Promise<void>;
   onPatchChallenge: (id: string, body: PatchChallengeRequest) => Promise<void>;
   onPatchStation: (id: string, body: PatchStationRequest) => Promise<void>;
   onStartChallenge: (challengeId: string, body: StartChallengeRequest) => Promise<void>;

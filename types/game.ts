@@ -109,6 +109,11 @@ export interface ChallengeResponse {
 
 export interface StartChallengeRequest {
   teamId: string;
+}
+
+export interface FinishChallengeRequest {
+  teamId: string;
+  enemyTeamId?: string;
   callShot?: number;
 }
 

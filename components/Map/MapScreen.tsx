@@ -12,6 +12,7 @@ import { MapViewport } from "@/components/Map/MapViewport";
 import { useMapSelection } from "@/components/Map/useMapSelection";
 import type {
   ChallengeResponse,
+  FinishChallengeRequest,
   GameActionResponse,
   GameState,
   PatchChallengeRequest,
@@ -54,10 +55,10 @@ export function MapScreen({
   gameState: GameState;
   isMutating: boolean;
   onAddStationChips: (stationId: string, body: { chips: number; teamId: string }) => Promise<void>;
-  onCompleteChallenge: (challengeId: string, body: { teamId: string }) => Promise<void>;
+  onCompleteChallenge: (challengeId: string, body: FinishChallengeRequest) => Promise<void>;
   onDeleteChallenge: (id: string) => Promise<void>;
   onDeleteStation: (id: string) => Promise<void>;
-  onFailChallenge: (challengeId: string, body: { teamId: string }) => Promise<void>;
+  onFailChallenge: (challengeId: string, body: FinishChallengeRequest) => Promise<void>;
   onPatchChallenge: (id: string, body: PatchChallengeRequest) => Promise<void>;
   onPatchStation: (id: string, body: PatchStationRequest) => Promise<void>;
   onStartChallenge: (challengeId: string, body: StartChallengeRequest) => Promise<void>;

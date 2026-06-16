@@ -6,6 +6,7 @@ import type {
   CreateChallengeRequest,
   CreateStationRequest,
   CreateTeamRequest,
+  FinishChallengeRequest,
   GameResponse,
   GamesResponse,
   GameState,
@@ -136,7 +137,7 @@ export function addStationChips(
 export function completeChallenge(
   gameId: string,
   challengeId: string,
-  body: { teamId: string },
+  body: FinishChallengeRequest,
 ) {
   return request<void>(`/games/${gameId}/challenges/${challengeId}/complete`, {
     body: JSON.stringify(body),
@@ -147,7 +148,7 @@ export function completeChallenge(
 export function failChallenge(
   gameId: string,
   challengeId: string,
-  body: { teamId: string },
+  body: FinishChallengeRequest,
 ) {
   return request<void>(`/games/${gameId}/challenges/${challengeId}/fail`, {
     body: JSON.stringify(body),
