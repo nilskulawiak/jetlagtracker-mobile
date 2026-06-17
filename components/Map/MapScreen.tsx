@@ -10,6 +10,7 @@ import { MapLegend } from "@/components/Map/MapLegend";
 import { MobileMapInspectorSheet } from "@/components/Map/MobileMapInspectorSheet";
 import { MapViewport } from "@/components/Map/MapViewport";
 import { useMapSelection } from "@/components/Map/useMapSelection";
+import { useGameSelection } from "@/hooks/useGameSelection";
 import type {
   ChallengeResponse,
   FinishChallengeRequest,
@@ -39,11 +40,6 @@ export function MapScreen({
   onPatchStation,
   onStartChallenge,
   onHoverChange,
-  onClearSelection,
-  onSelectChallenge,
-  onSelectStation,
-  selectedChallengeId,
-  selectedStationId,
   selectedTeamId,
   setupPanel,
   stations,
@@ -62,12 +58,7 @@ export function MapScreen({
   onPatchChallenge: (id: string, body: PatchChallengeRequest) => Promise<void>;
   onPatchStation: (id: string, body: PatchStationRequest) => Promise<void>;
   onStartChallenge: (challengeId: string, body: StartChallengeRequest) => Promise<void>;
-  onClearSelection: () => void;
   onHoverChange: (isHovered: boolean) => void;
-  onSelectChallenge: (challengeId: string) => void;
-  onSelectStation: (stationId: string) => void;
-  selectedChallengeId: string | null;
-  selectedStationId: string | null;
   selectedTeamId: string;
   setupPanel?: ReactNode;
   stations: StationStateResponse[];
@@ -78,6 +69,13 @@ export function MapScreen({
   const isMobileLayout = width < 700;
   const [isLegendVisible, setIsLegendVisible] = useState(false);
   const teamsById = mapTeamsById(teams);
+  const {
+    clearMapSelection,
+    selectChallenge,
+    selectedChallengeId,
+    selectedStationId,
+    selectStation,
+  } = useGameSelection();
   const {
     handleSelectMapItems,
     isInspectorExpanded,
@@ -92,9 +90,9 @@ export function MapScreen({
   } = useMapSelection({
     challenges,
     gameState,
-    onClearSelection,
-    onSelectChallenge,
-    onSelectStation,
+    onClearSelection: clearMapSelection,
+    onSelectChallenge: selectChallenge,
+    onSelectStation: selectStation,
     selectedChallengeId,
     selectedStationId,
     setupPanel,

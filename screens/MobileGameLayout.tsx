@@ -23,7 +23,6 @@ type Tab = "map" | "teams" | "log";
 export function MobileGameLayout({
   actions,
   challenges,
-  clearMapSelection,
   createdChallengeCount,
   error,
   gameActions,
@@ -33,17 +32,12 @@ export function MobileGameLayout({
   isMutating,
   loadGameState,
   ownedStationCounts,
-  selectChallenge,
-  selectedChallengeId,
-  selectedStationId,
   selectedTeamId,
-  selectStation,
   stations,
   teams,
 }: {
   actions: GameActionResponse[];
   challenges: ChallengeResponse[];
-  clearMapSelection: () => void;
   createdChallengeCount: number;
   error: string | null;
   gameActions: ReturnType<typeof useGameActions>;
@@ -53,11 +47,7 @@ export function MobileGameLayout({
   isMutating: boolean;
   loadGameState: () => void;
   ownedStationCounts: ReturnType<typeof getOwnedStationCounts>;
-  selectChallenge: (id: string) => void;
-  selectedChallengeId: string | null;
-  selectedStationId: string | null;
   selectedTeamId: string;
-  selectStation: (id: string) => void;
   stations: StationStateResponse[];
   teams: TeamResponse[];
 }) {
@@ -82,12 +72,7 @@ export function MobileGameLayout({
             onPatchChallenge={gameActions.patchChallenge}
             onPatchStation={gameActions.patchStation}
             onStartChallenge={gameActions.startChallenge}
-            onClearSelection={clearMapSelection}
             onHoverChange={() => undefined}
-            onSelectChallenge={selectChallenge}
-            onSelectStation={selectStation}
-            selectedChallengeId={selectedChallengeId}
-            selectedStationId={selectedStationId}
             selectedTeamId={selectedTeamId}
             setupPanel={
               isGameCreated ? (

@@ -16,13 +16,31 @@ import { TeamSelector } from "@/components/Inspector/TeamSelector";
 import { Pill } from "@/components/Shared/Pill";
 import { styles } from "@/components/Shared/styles";
 import { useGameActions } from "@/hooks/useGameActions";
-import { useGameSelection } from "@/hooks/useGameSelection";
 import { useGameState } from "@/hooks/useGameState";
 import { useSelectedTeam } from "@/hooks/useSelectedTeam";
 import { DesktopGameLayout } from "@/screens/DesktopGameLayout";
 import { MobileGameLayout } from "@/screens/MobileGameLayout";
 import { colors } from "@/utils/colors";
 import { getOwnedStationCounts } from "@/utils/gameSelectors";
+import type {
+  ChallengeResponse,
+  GameActionResponse,
+  GameState,
+  StationStateResponse,
+  TeamResponse,
+} from "@/types/game";
+
+type SharedLayoutProps = {
+  actions: GameActionResponse[];
+  challenges: ChallengeResponse[];
+  createdChallengeCount: number;
+  gameActions: ReturnType<typeof useGameActions>;
+  isGameCreated: boolean;
+  isMutating: boolean;
+  selectedTeamId: string;
+  stations: StationStateResponse[];
+  teams: TeamResponse[];
+};
 
 export function GameScreen({
   initialGameId,
@@ -54,30 +72,18 @@ export function GameScreen({
   const actions = gameState?.actions ?? [];
   const ownedStationCounts = getOwnedStationCounts(stations);
   const { selectedTeamId, setSelectedTeamId } = useSelectedTeam(teams, initialTeamId);
-  const {
-    clearMapSelection,
-    selectChallenge,
-    selectedChallengeId,
-    selectedStationId,
-    selectStation,
-  } = useGameSelection();
   const gameActions = useGameActions({ gameId, runMutation });
   const isGameCreated = gameState?.game.status === "CREATED";
   const createdChallengeCount = challenges.filter((c) => c.status === "CREATED").length;
 
-  const sharedLayoutProps = {
+  const sharedLayoutProps: SharedLayoutProps = {
     actions,
     challenges,
-    clearMapSelection,
     createdChallengeCount,
     gameActions,
     isGameCreated,
     isMutating,
-    selectChallenge,
-    selectedChallengeId,
-    selectedStationId,
     selectedTeamId,
-    selectStation,
     stations,
     teams,
   };
@@ -104,7 +110,7 @@ export function GameScreen({
             <View style={styles.titleBlock}>
               {isMobileLayout ? null : <Text style={styles.kicker}>Jet Lag tracker</Text>}
               <Text numberOfLines={1} style={[styles.title, isMobileLayout && styles.mobileTitle]}>
-                {gameState?.game.name ?? "Taiwan"}
+                {gameState?.game.name}
               </Text>
             </View>
             <View style={styles.headerActions}>
@@ -151,35 +157,74 @@ export function GameScreen({
           ) : null}
         </View>
 
-        {isLoading && !gameState ? (
-          <View style={styles.centerState}>
-            <ActivityIndicator color={colors.info} />
-            <Text style={styles.centerText}>Loading game state...</Text>
-          </View>
-        ) : error && !gameState ? (
-          <View style={styles.centerState}>
-            <MaterialIcons color={colors.danger} name="error-outline" size={32} />
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        ) : gameState ? (
-          isMobileLayout ? (
-            <MobileGameLayout
-              {...sharedLayoutProps}
-              error={error}
-              gameState={gameState}
-              isLoading={isLoading}
-              loadGameState={loadGameState}
-              ownedStationCounts={ownedStationCounts}
-            />
-          ) : (
-            <DesktopGameLayout
-              {...sharedLayoutProps}
-              gameState={gameState}
-              mutationError={mutationError}
-            />
-          )
-        ) : null}
+        <GameBody
+          error={error}
+          gameState={gameState}
+          isMobileLayout={isMobileLayout}
+          isLoading={isLoading}
+          loadGameState={loadGameState}
+          mutationError={mutationError}
+          ownedStationCounts={ownedStationCounts}
+          sharedLayoutProps={sharedLayoutProps}
+        />
       </KeyboardAvoidingView>
     </SafeAreaView>
+  );
+}
+
+function GameBody({
+  error,
+  gameState,
+  isMobileLayout,
+  isLoading,
+  loadGameState,
+  mutationError,
+  ownedStationCounts,
+  sharedLayoutProps,
+}: {
+  error: string | null;
+  gameState: GameState | null;
+  isMobileLayout: boolean;
+  isLoading: boolean;
+  loadGameState: () => void;
+  mutationError: string | null;
+  ownedStationCounts: ReturnType<typeof getOwnedStationCounts>;
+  sharedLayoutProps: SharedLayoutProps;
+}) {
+  if (isLoading && !gameState) {
+    return (
+      <View style={styles.centerState}>
+        <ActivityIndicator color={colors.info} />
+        <Text style={styles.centerText}>Loading game state...</Text>
+      </View>
+    );
+  }
+
+  if (error && !gameState) {
+    return (
+      <View style={styles.centerState}>
+        <MaterialIcons color={colors.danger} name="error-outline" size={32} />
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
+
+  if (!gameState) return null;
+
+  return isMobileLayout ? (
+    <MobileGameLayout
+      {...sharedLayoutProps}
+      error={error}
+      gameState={gameState}
+      isLoading={isLoading}
+      loadGameState={loadGameState}
+      ownedStationCounts={ownedStationCounts}
+    />
+  ) : (
+    <DesktopGameLayout
+      {...sharedLayoutProps}
+      gameState={gameState}
+      mutationError={mutationError}
+    />
   );
 }

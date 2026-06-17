@@ -16,35 +16,25 @@ import type {
 export function DesktopGameLayout({
   actions,
   challenges,
-  clearMapSelection,
   createdChallengeCount,
   gameActions,
   gameState,
   isGameCreated,
   isMutating,
   mutationError,
-  selectChallenge,
-  selectedChallengeId,
-  selectedStationId,
   selectedTeamId,
-  selectStation,
   stations,
   teams,
 }: {
   actions: GameActionResponse[];
   challenges: ChallengeResponse[];
-  clearMapSelection: () => void;
   createdChallengeCount: number;
   gameActions: ReturnType<typeof useGameActions>;
   gameState: GameState;
   isGameCreated: boolean;
   isMutating: boolean;
   mutationError: string | null;
-  selectChallenge: (id: string) => void;
-  selectedChallengeId: string | null;
-  selectedStationId: string | null;
   selectedTeamId: string;
-  selectStation: (id: string) => void;
   stations: StationStateResponse[];
   teams: TeamResponse[];
 }) {
@@ -65,12 +55,7 @@ export function DesktopGameLayout({
         onPatchChallenge={gameActions.patchChallenge}
         onPatchStation={gameActions.patchStation}
         onStartChallenge={gameActions.startChallenge}
-        onClearSelection={clearMapSelection}
         onHoverChange={() => undefined}
-        onSelectChallenge={selectChallenge}
-        onSelectStation={selectStation}
-        selectedChallengeId={selectedChallengeId}
-        selectedStationId={selectedStationId}
         selectedTeamId={selectedTeamId}
         setupPanel={
           isGameCreated ? (
