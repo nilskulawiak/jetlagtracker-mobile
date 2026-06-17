@@ -20,7 +20,7 @@ function normalizeGameState(data: GameState): GameState {
 const POLL_INTERVAL_MS = 5_000;
 
 export function useGameState(initialGameId = "") {
-  const [gameId, setGameId] = useState(initialGameId);
+  const [gameId] = useState(initialGameId);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);

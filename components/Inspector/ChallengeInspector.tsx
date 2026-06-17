@@ -6,9 +6,8 @@ import { PrimaryButton, SecondaryButton } from "@/components/Shared/Buttons";
 import { Stat } from "@/components/Shared/Stat";
 import { styles } from "@/components/Shared/styles";
 import type { ChallengeResponse, FinishChallengeRequest, StartChallengeRequest } from "@/types/game";
-import { getChallengeStatusColor, isChallengeDone } from "@/utils/colors";
 import { getChallengeValueLabel } from "@/utils/challengeDisplay";
-import { colors } from "@/utils/colors";
+import { colors, getChallengeStatusColor, isChallengeDone } from "@/utils/colors";
 
 export function ChallengeInspector({
   challenge,
