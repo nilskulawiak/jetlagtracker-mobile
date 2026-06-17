@@ -65,7 +65,6 @@ export function MapScreen({
   teams: TeamResponse[];
 }) {
   const { width } = useWindowDimensions();
-  const isWideLayout = width >= 900;
   const isMobileLayout = width < 700;
   const [isLegendVisible, setIsLegendVisible] = useState(false);
   const teamsById = mapTeamsById(teams);
@@ -116,13 +115,11 @@ export function MapScreen({
       onStartChallenge={onStartChallenge}
       selectedTeamId={selectedTeamId}
       station={selectedStation}
-      subtleEmpty={isWideLayout}
-      teams={teams}
       teamsById={teamsById}
     />
   );
   return (
-    <View style={[mapStyles.workspace, isWideLayout && mapStyles.workspaceWide, isMobileLayout && mapStyles.mobileWorkspace]}>
+    <View style={[mapStyles.workspace, !isMobileLayout && mapStyles.workspaceWide, isMobileLayout && mapStyles.mobileWorkspace]}>
       <View style={[mapStyles.mainPane, isMobileLayout && mapStyles.mobileMainPane]}>
         <View style={mapStyles.viewportSlot}>
           <MapViewport
@@ -134,7 +131,6 @@ export function MapScreen({
             selectedStationId={selectedStationId}
             stations={stations}
             teamsById={teamsById}
-            useTightFrame={isWideLayout}
             useMobileFrame={isMobileLayout}
           />
 
@@ -187,7 +183,6 @@ export function MapScreen({
         <DesktopMapSidebar
           actions={actions}
           isGameCreated={isGameCreated}
-          isWideLayout={isWideLayout}
           nearbyItems={nearbyItems}
           onSelectNearbyItem={selectNearbyItem}
           renderInspector={renderInspector}

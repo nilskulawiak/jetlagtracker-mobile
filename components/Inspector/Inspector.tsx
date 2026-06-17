@@ -17,7 +17,6 @@ import type {
 export function Inspector({
   challenge,
   hideHeader = false,
-  subtleEmpty = false,
   isGameCreated,
   isMutating,
   onAddStationChips,
@@ -30,12 +29,10 @@ export function Inspector({
   onStartChallenge,
   selectedTeamId,
   station,
-  teams,
-  teamsById,
+  teamsById
 }: {
   challenge: ChallengeResponse | null;
   hideHeader?: boolean;
-  subtleEmpty?: boolean;
   isGameCreated: boolean;
   isMutating: boolean;
   onAddStationChips: (stationId: string, body: { chips: number; teamId: string }) => Promise<void>;
@@ -48,7 +45,6 @@ export function Inspector({
   onStartChallenge: (challengeId: string, body: StartChallengeRequest) => Promise<void>;
   selectedTeamId: string;
   station: StationStateResponse | null;
-  teams: TeamResponse[];
   teamsById: Map<string, TeamResponse>;
 }) {
   if (isGameCreated && (station || challenge)) {
@@ -93,8 +89,8 @@ export function Inspector({
   }
 
   return (
-    <View style={[styles.panel, subtleEmpty && styles.emptyInspectorPanel]}>
-      <Text style={[styles.panelTitle, subtleEmpty && styles.emptyInspectorTitle]}>Map selection</Text>
+    <View style={[styles.panel]}>
+      <Text style={[styles.panelTitle]}>Map selection</Text>
       <Text style={styles.emptyText}>Tap a station or challenge to inspect it and record an action.</Text>
     </View>
   );

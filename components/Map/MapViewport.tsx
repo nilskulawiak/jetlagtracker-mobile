@@ -18,7 +18,6 @@ export function MapViewport({
   onSelectMapItems,
   selectedChallengeId,
   selectedStationId,
-  useTightFrame = false,
   useMobileFrame = false,
   stations,
   teamsById,
@@ -29,7 +28,6 @@ export function MapViewport({
   onSelectMapItems: (items: MapSelectableItem[]) => void;
   selectedChallengeId: string | null;
   selectedStationId: string | null;
-  useTightFrame?: boolean;
   useMobileFrame?: boolean;
   stations: StationStateResponse[];
   teamsById: Map<string, TeamResponse>;
@@ -54,8 +52,7 @@ export function MapViewport({
     onHoverChange,
     onSelectMapItems,
     stations,
-    useMobileFrame,
-    useTightFrame,
+    useMobileFrame
   });
 
   return (
@@ -65,8 +62,7 @@ export function MapViewport({
         ref={mapViewportRef}
         style={[
           mapStyles.viewport,
-          useTightFrame && mapStyles.viewportTight,
-          useMobileFrame && mapStyles.mobileViewport,
+          useMobileFrame ? mapStyles.mobileViewport : mapStyles.viewportTight,
         ]}
         {...mapWebWheelProps}
       >
@@ -114,7 +110,7 @@ export function MapViewport({
           </Animated.View>
         ) : null}
 
-        {useTightFrame ? (
+        {!useMobileFrame ? (
           <Pressable
             accessibilityLabel="Fit full map"
             accessibilityRole="button"

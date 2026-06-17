@@ -12,7 +12,6 @@ import type { MapSelectableItem } from "@/utils/mapSelection";
 export function DesktopMapSidebar({
   actions,
   isGameCreated,
-  isWideLayout,
   nearbyItems,
   onSelectNearbyItem,
   renderInspector,
@@ -25,7 +24,6 @@ export function DesktopMapSidebar({
 }: {
   actions: GameActionResponse[];
   isGameCreated: boolean;
-  isWideLayout: boolean;
   nearbyItems: MapSelectableItem[];
   onSelectNearbyItem: (item: MapSelectableItem) => void;
   renderInspector: (hideHeader?: boolean) => ReactNode;
@@ -37,13 +35,8 @@ export function DesktopMapSidebar({
   teamsById: Map<string, TeamResponse>;
 }) {
   return (
-    <View
-      style={[
-        mapStyles.inspectorShell,
-        isWideLayout ? mapStyles.inspectorShellWide : mapStyles.inspectorShellCompact,
-      ]}
-    >
-      {isWideLayout && !isGameCreated ? <TeamSummary stations={stations} teams={teams} /> : null}
+    <View style={[mapStyles.inspectorShell, mapStyles.inspectorShellWide]}>
+      {!isGameCreated ? <TeamSummary stations={stations} teams={teams} /> : null}
       <ScrollView
         contentContainerStyle={mapStyles.inspectorPanelWide}
         showsVerticalScrollIndicator={false}
@@ -60,7 +53,7 @@ export function DesktopMapSidebar({
         />
         {renderInspector(false)}
       </ScrollView>
-      {isWideLayout && !isGameCreated ? (
+      {!isGameCreated ? (
         <View style={mapStyles.actionLogPanel}>
           <View style={styles.panelHeader}>
             <Text style={mapStyles.actionLogTitle}>Action log</Text>

@@ -43,7 +43,6 @@ export function useMapViewportTransform({
   onSelectMapItems,
   stations,
   useMobileFrame,
-  useTightFrame,
 }: {
   challenges: ChallengeResponse[];
   gameState: GameState;
@@ -53,7 +52,6 @@ export function useMapViewportTransform({
   onSelectMapItems: (items: MapSelectableItem[]) => void;
   stations: StationStateResponse[];
   useMobileFrame: boolean;
-  useTightFrame: boolean;
 }) {
   const mapViewportRef = useRef<View | null>(null);
   const [viewportSize, setViewportSize] = useState({ height: 0, width: 0 });
@@ -85,7 +83,7 @@ export function useMapViewportTransform({
   }, []);
 
   useEffect(() => {
-    if ((!useMobileFrame && !useTightFrame) || fitScale <= 0 || hasSetInitialZoom.value) {
+    if (fitScale <= 0 || hasSetInitialZoom.value) {
       return;
     }
 
@@ -153,7 +151,6 @@ export function useMapViewportTransform({
     translateX,
     translateY,
     useMobileFrame,
-    useTightFrame,
     viewportSize.height,
     viewportSize.width,
   ]);
