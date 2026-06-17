@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Platform } from "react-native";
 
 import { ApiError, getGameState } from "@/api/gameApi";
@@ -24,6 +24,7 @@ export function useGameState(initialGameId = "") {
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isMutating, setIsMutating] = useState(false);
+  const loadAbortControllerRef = useRef<AbortController | null>(null);
 
   const loadGameState = useCallback(async () => {
     if (!gameId.trim()) {
@@ -32,22 +33,33 @@ export function useGameState(initialGameId = "") {
       return;
     }
 
+    loadAbortControllerRef.current?.abort();
+    const controller = new AbortController();
+    loadAbortControllerRef.current = controller;
+
     try {
       setError(null);
       setMutationError(null);
-      const data = await getGameState(gameId.trim());
+      const data = await getGameState(gameId.trim(), controller.signal);
       setGameState(normalizeGameState(data));
     } catch (nextError) {
+      if ((nextError as Error)?.name === "AbortError") return;
       console.error(nextError);
       setError("Could not load game state. Check the backend URL and game id.");
     } finally {
-      setIsLoading(false);
+      if (!controller.signal.aborted) setIsLoading(false);
     }
   }, [gameId]);
 
   useEffect(() => {
     void loadGameState();
   }, [loadGameState]);
+
+  useEffect(() => {
+    return () => {
+      loadAbortControllerRef.current?.abort();
+    };
+  }, []);
 
   const reload = useCallback(() => {
     setIsLoading(true);

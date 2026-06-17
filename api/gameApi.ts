@@ -48,29 +48,59 @@ export class ApiError extends Error {
   }
 }
 
+const REQUEST_TIMEOUT_MS = 10_000;
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${getApiBaseUrl()}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...init?.headers,
-    },
-  });
+  const controller = new AbortController();
+  let timedOut = false;
+  const timeoutId = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, REQUEST_TIMEOUT_MS);
 
-  if (!response.ok) {
-    const detail = await response.text();
-    throw new ApiError(detail || `Request failed with ${response.status}`, response.status);
+  const externalSignal = init?.signal;
+  if (externalSignal) {
+    if (externalSignal.aborted) {
+      controller.abort(externalSignal.reason);
+    } else {
+      externalSignal.addEventListener("abort", () => controller.abort(externalSignal.reason), {
+        once: true,
+      });
+    }
   }
 
-  if (response.status === 204) {
-    return undefined as T;
-  }
+  try {
+    const response = await fetch(`${getApiBaseUrl()}${path}`, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...init?.headers,
+      },
+      signal: controller.signal,
+    });
 
-  return (await response.json()) as T;
+    if (!response.ok) {
+      const detail = await response.text();
+      throw new ApiError(detail || `Request failed with ${response.status}`, response.status);
+    }
+
+    if (response.status === 204) {
+      return undefined as T;
+    }
+
+    return (await response.json()) as T;
+  } catch (error) {
+    if ((error as Error)?.name === "AbortError" && timedOut) {
+      throw new ApiError("Request timed out", 408);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
-export function getGameState(gameId: string) {
-  return request<GameState>(`/games/${gameId}/state`);
+export function getGameState(gameId: string, signal?: AbortSignal) {
+  return request<GameState>(`/games/${gameId}/state`, signal ? { signal } : undefined);
 }
 
 export function getGames() {
