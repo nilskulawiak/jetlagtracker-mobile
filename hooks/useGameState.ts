@@ -17,6 +17,8 @@ function normalizeGameState(data: GameState): GameState {
   };
 }
 
+const POLL_INTERVAL_MS = 5_000;
+
 export function useGameState(initialGameId = "") {
   const [gameId, setGameId] = useState(initialGameId);
   const [gameState, setGameState] = useState<GameState | null>(null);
@@ -26,7 +28,7 @@ export function useGameState(initialGameId = "") {
   const [isMutating, setIsMutating] = useState(false);
   const loadAbortControllerRef = useRef<AbortController | null>(null);
 
-  const loadGameState = useCallback(async () => {
+  const loadGameState = useCallback(async (silent = false) => {
     if (!gameId.trim()) {
       setError("Enter a game id.");
       setIsLoading(false);
@@ -38,14 +40,17 @@ export function useGameState(initialGameId = "") {
     loadAbortControllerRef.current = controller;
 
     try {
-      setError(null);
-      setMutationError(null);
+      if (!silent) {
+        setError(null);
+        setMutationError(null);
+      }
       const data = await getGameState(gameId.trim(), controller.signal);
       setGameState(normalizeGameState(data));
+      if (silent) setError(null);
     } catch (nextError) {
       if ((nextError as Error)?.name === "AbortError") return;
       console.error(nextError);
-      setError("Could not load game state. Check the backend URL and game id.");
+      if (!silent) setError("Could not load game state. Check the backend URL and game id.");
     } finally {
       if (!controller.signal.aborted) setIsLoading(false);
     }
@@ -53,6 +58,13 @@ export function useGameState(initialGameId = "") {
 
   useEffect(() => {
     void loadGameState();
+  }, [loadGameState]);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      void loadGameState(true);
+    }, POLL_INTERVAL_MS);
+    return () => clearInterval(id);
   }, [loadGameState]);
 
   useEffect(() => {
