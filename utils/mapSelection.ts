@@ -28,6 +28,7 @@ type BuildMapSelectableItemsParams = {
 
 type ResolveMapTapParams = {
   challenges: ChallengeResponse[];
+  isPointerDevice?: boolean;
   mapHeight: number;
   mapWidth: number;
   renderedMapHeight: number;
@@ -42,6 +43,10 @@ type ResolveMapTapParams = {
 const BASE_TOUCH_RADIUS = 30;
 const MIN_TOUCH_RADIUS = 14;
 const AMBIGUITY_MARGIN = 8;
+const POINTER_HIT_RADIUS: Record<MapSelectableKind, number> = {
+  challenge: 15,
+  station: 8,
+};
 
 export function buildMapSelectableItems({
   challenges,
@@ -77,6 +82,7 @@ export function buildMapSelectableItems({
 
 export function resolveMapTap({
   challenges,
+  isPointerDevice = false,
   mapHeight,
   mapWidth,
   renderedMapHeight,
@@ -87,8 +93,7 @@ export function resolveMapTap({
   tapMapX,
   tapMapY,
 }: ResolveMapTapParams): MapSelectableItem[] {
-  const touchRadius = Math.max(MIN_TOUCH_RADIUS, BASE_TOUCH_RADIUS / Math.max(scale, 1));
-  const hits = buildMapSelectableItems({
+  const selectableItems = buildMapSelectableItems({
     challenges,
     mapHeight,
     mapWidth,
@@ -96,7 +101,18 @@ export function resolveMapTap({
     renderedMapWidth,
     showCreatedChallenges,
     stations,
-  })
+  });
+
+  if (isPointerDevice) {
+    const hit = selectableItems
+      .map((item) => ({ distance: Math.hypot(item.renderedX - tapMapX, item.renderedY - tapMapY), item }))
+      .filter((h) => h.distance <= POINTER_HIT_RADIUS[h.item.kind])
+      .sort((a, b) => a.distance - b.distance)[0];
+    return hit ? [hit.item] : [];
+  }
+
+  const touchRadius = Math.max(MIN_TOUCH_RADIUS, BASE_TOUCH_RADIUS / Math.max(scale, 1));
+  const hits = selectableItems
     .map((item) => ({
       distance: Math.hypot(item.renderedX - tapMapX, item.renderedY - tapMapY),
       item,

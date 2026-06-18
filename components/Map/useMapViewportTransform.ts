@@ -210,6 +210,7 @@ export function useMapViewportTransform({
     const tapMapY = (tapY - viewportSize.height / 2 - translateY.value) / scale.value + renderedMapHeight / 2;
     const items = resolveMapTap({
       challenges,
+      isPointerDevice: !useMobileFrame,
       mapHeight,
       mapWidth,
       renderedMapHeight,
