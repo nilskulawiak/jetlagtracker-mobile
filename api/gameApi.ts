@@ -14,8 +14,10 @@ import type {
   PatchStationRequest,
   PatchTeamRequest,
   PresetSummaryResponse,
+  SetStationChipsRequest,
   StartChallengeRequest,
   StartGameRequest,
+  StationChipStateResponse,
 } from "@/types/game";
 
 function getLanBaseUrl() {
@@ -237,5 +239,29 @@ export function patchStation(gameId: string, stationId: string, body: PatchStati
   return request<void>(`/games/${gameId}/stations/${stationId}`, {
     body: JSON.stringify(body),
     method: "PATCH",
+  });
+}
+
+export function setStationChips(
+  gameId: string,
+  stationId: string,
+  teamId: string,
+  body: SetStationChipsRequest,
+) {
+  return request<StationChipStateResponse>(
+    `/games/${gameId}/stations/${stationId}/chips/${teamId}`,
+    { body: JSON.stringify(body), method: "PUT" },
+  );
+}
+
+export function revertChallengeToCreated(gameId: string, challengeId: string) {
+  return request<void>(`/games/${gameId}/challenges/${challengeId}/revert-to-created`, {
+    method: "POST",
+  });
+}
+
+export function deleteChallengeAttempt(gameId: string, challengeId: string, teamId: string) {
+  return request<void>(`/games/${gameId}/challenges/${challengeId}/attempts/${teamId}`, {
+    method: "DELETE",
   });
 }

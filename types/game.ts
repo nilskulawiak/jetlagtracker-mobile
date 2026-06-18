@@ -139,6 +139,10 @@ export interface PatchStationRequest {
   yCoordinate?: number;
 }
 
+export interface SetStationChipsRequest {
+  chips: number;
+}
+
 export interface GameActionResponse {
   id: string;
   type: string;

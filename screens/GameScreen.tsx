@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { GMToolsScreen } from "@/components/GMTools/GMToolsScreen";
 import { TeamSelector } from "@/components/Inspector/TeamSelector";
 import { Pill } from "@/components/Shared/Pill";
 import { styles } from "@/components/Shared/styles";
@@ -54,6 +55,7 @@ export function GameScreen({
   const { width } = useWindowDimensions();
   const isMobileLayout = width < 700;
   const [showGameDetails, setShowGameDetails] = useState(false);
+  const [showGMTools, setShowGMTools] = useState(false);
   const {
     error,
     gameId,
@@ -114,6 +116,16 @@ export function GameScreen({
               </Text>
             </View>
             <View style={styles.headerActions}>
+              {gameState?.game.status === "STARTED" ? (
+                <Pressable
+                  accessibilityLabel="GM Tools"
+                  accessibilityRole="button"
+                  onPress={() => setShowGMTools(true)}
+                  style={[styles.iconButton, isMobileLayout && styles.mobileIconButton]}
+                >
+                  <MaterialIcons color={colors.danger} name="admin-panel-settings" size={isMobileLayout ? 20 : 22} />
+                </Pressable>
+              ) : null}
               <Pressable
                 accessibilityLabel="Game details"
                 accessibilityRole="button"
@@ -168,6 +180,16 @@ export function GameScreen({
           sharedLayoutProps={sharedLayoutProps}
         />
       </KeyboardAvoidingView>
+
+      {gameState && showGMTools ? (
+        <GMToolsScreen
+          gameId={gameId}
+          gameState={gameState}
+          reload={reload}
+          visible={showGMTools}
+          onClose={() => setShowGMTools(false)}
+        />
+      ) : null}
     </SafeAreaView>
   );
 }
