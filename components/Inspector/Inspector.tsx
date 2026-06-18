@@ -21,12 +21,15 @@ export function Inspector({
   isMutating,
   onAddStationChips,
   onCompleteChallenge,
+  onCoordinateChange,
   onDeleteChallenge,
   onDeleteStation,
+  onEditingChange,
   onFailChallenge,
   onPatchChallenge,
   onPatchStation,
   onStartChallenge,
+  pendingCoords,
   selectedTeamId,
   station,
   teamsById
@@ -37,12 +40,15 @@ export function Inspector({
   isMutating: boolean;
   onAddStationChips: (stationId: string, body: { chips: number; teamId: string }) => Promise<void>;
   onCompleteChallenge: (challengeId: string, body: FinishChallengeRequest) => Promise<void>;
+  onCoordinateChange?: (x: number, y: number) => void;
   onDeleteChallenge: (id: string) => Promise<void>;
   onDeleteStation: (id: string) => Promise<void>;
+  onEditingChange?: (isEditing: boolean) => void;
   onFailChallenge: (challengeId: string, body: FinishChallengeRequest) => Promise<void>;
   onPatchChallenge: (id: string, body: PatchChallengeRequest) => Promise<void>;
   onPatchStation: (id: string, body: PatchStationRequest) => Promise<void>;
   onStartChallenge: (challengeId: string, body: StartChallengeRequest) => Promise<void>;
+  pendingCoords?: { x: number; y: number } | null;
   selectedTeamId: string;
   station: StationStateResponse | null;
   teamsById: Map<string, TeamResponse>;
@@ -52,10 +58,13 @@ export function Inspector({
       <CreationInspector
         challenge={challenge}
         isMutating={isMutating}
+        onCoordinateChange={onCoordinateChange}
         onDeleteChallenge={onDeleteChallenge}
         onDeleteStation={onDeleteStation}
+        onEditingChange={onEditingChange}
         onPatchChallenge={onPatchChallenge}
         onPatchStation={onPatchStation}
+        pendingCoords={pendingCoords}
         station={station}
       />
     );

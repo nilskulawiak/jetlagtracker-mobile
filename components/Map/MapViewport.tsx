@@ -1,6 +1,6 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { useEffect } from "react";
-import { Image, Pressable, View } from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
@@ -23,6 +23,7 @@ function PendingMarker({
   onDragEnd,
   renderedMapHeight,
   renderedMapWidth,
+  reward,
   scale,
   type,
 }: {
@@ -34,13 +35,13 @@ function PendingMarker({
   onDragEnd: (gameX: number, gameY: number) => void;
   renderedMapHeight: number;
   renderedMapWidth: number;
+  reward?: number;
   scale: SharedValue<number>;
   type: "STATION" | "CHALLENGE";
 }) {
   const dragOffsetX = useSharedValue(0);
   const dragOffsetY = useSharedValue(0);
 
-  // Reset drag offset when parent coordinates update (after a drag completes)
   useEffect(() => {
     dragOffsetX.value = 0;
     dragOffsetY.value = 0;
@@ -73,29 +74,6 @@ function PendingMarker({
       onDragEnd(clampedX, clampedY);
     });
 
-  const markerStyle =
-    type === "STATION"
-      ? {
-          backgroundColor: colors.panel,
-          borderColor: colors.info,
-          borderRadius: 4,
-          borderWidth: 2,
-          height: 20,
-          width: 20,
-          boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
-        }
-      : {
-          alignItems: "center" as const,
-          backgroundColor: colors.panel,
-          borderColor: colors.info,
-          borderRadius: 14,
-          borderWidth: 2,
-          height: 28,
-          justifyContent: "center" as const,
-          width: 28,
-          boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
-        };
-
   return (
     <GestureDetector gesture={panGesture}>
       <Animated.View
@@ -105,11 +83,25 @@ function PendingMarker({
           dragStyle,
         ]}
       >
-        <View style={markerStyle}>
-          {type === "CHALLENGE" ? (
-            <MaterialIcons color={colors.info} name="add" size={16} />
-          ) : null}
-        </View>
+        {type === "STATION" ? (
+          <View
+            style={[
+              mapStyles.stationMarker,
+              { backgroundColor: colors.stationEmpty, borderColor: colors.info, boxShadow: "0 2px 6px rgba(0,0,0,0.25)" },
+            ]}
+          />
+        ) : (
+          <View
+            style={[
+              mapStyles.challengeMarker,
+              { backgroundColor: colors.info, boxShadow: "0 2px 6px rgba(0,0,0,0.25)" },
+            ]}
+          >
+            {reward !== undefined ? (
+              <Text style={mapStyles.challengeMarkerText}>{reward}</Text>
+            ) : null}
+          </View>
+        )}
       </Animated.View>
     </GestureDetector>
   );
@@ -117,7 +109,9 @@ function PendingMarker({
 
 export function MapViewport({
   challenges,
+  editingItem,
   gameState,
+  onEditMarkerDragEnd,
   onEmptyMapTap,
   onHoverChange,
   onPendingMarkerDragEnd,
@@ -130,12 +124,20 @@ export function MapViewport({
   teamsById,
 }: {
   challenges: ChallengeResponse[];
+  editingItem?: {
+    type: "STATION" | "CHALLENGE";
+    gameX: number;
+    gameY: number;
+    reward?: number;
+    excludeId: string;
+  } | null;
   gameState: GameState;
+  onEditMarkerDragEnd?: (gameX: number, gameY: number) => void;
   onEmptyMapTap?: (gameX: number, gameY: number, viewportX: number, viewportY: number) => void;
   onHoverChange: (isHovered: boolean) => void;
   onPendingMarkerDragEnd?: (gameX: number, gameY: number) => void;
   onSelectMapItems: (items: MapSelectableItem[]) => void;
-  pendingCreation?: { type: "STATION" | "CHALLENGE"; gameX: number; gameY: number } | null;
+  pendingCreation?: { type: "STATION" | "CHALLENGE"; gameX: number; gameY: number; reward?: number } | null;
   selectedChallengeId: string | null;
   selectedStationId: string | null;
   useMobileFrame?: boolean;
@@ -167,6 +169,9 @@ export function MapViewport({
     stations,
     useMobileFrame,
   });
+
+  const excludeStationId = editingItem?.type === "STATION" ? editingItem.excludeId : undefined;
+  const excludeChallengeId = editingItem?.type === "CHALLENGE" ? editingItem.excludeId : undefined;
 
   return (
     <GestureDetector gesture={mapGesture}>
@@ -202,6 +207,7 @@ export function MapViewport({
 
               <ChallengeMarkers
                 challenges={challenges}
+                excludeChallengeId={excludeChallengeId}
                 mapHeight={mapHeight}
                 mapWidth={mapWidth}
                 renderedMapHeight={renderedMapHeight}
@@ -211,6 +217,7 @@ export function MapViewport({
               />
 
               <StationMarkers
+                excludeStationId={excludeStationId}
                 mapHeight={mapHeight}
                 mapWidth={mapWidth}
                 renderedMapHeight={renderedMapHeight}
@@ -230,8 +237,25 @@ export function MapViewport({
                   onDragEnd={onPendingMarkerDragEnd}
                   renderedMapHeight={renderedMapHeight}
                   renderedMapWidth={renderedMapWidth}
+                  reward={pendingCreation.reward}
                   scale={scale}
                   type={pendingCreation.type}
+                />
+              ) : null}
+
+              {editingItem && onEditMarkerDragEnd ? (
+                <PendingMarker
+                  gameX={editingItem.gameX}
+                  gameY={editingItem.gameY}
+                  mapHeight={mapHeight}
+                  mapPanGesture={mapPanGesture}
+                  mapWidth={mapWidth}
+                  onDragEnd={onEditMarkerDragEnd}
+                  renderedMapHeight={renderedMapHeight}
+                  renderedMapWidth={renderedMapWidth}
+                  reward={editingItem.reward}
+                  scale={scale}
+                  type={editingItem.type}
                 />
               ) : null}
             </View>

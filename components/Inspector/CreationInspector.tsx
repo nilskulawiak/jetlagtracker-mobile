@@ -1,8 +1,8 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
-import { PrimaryButton } from "@/components/Shared/Buttons";
+import { ItemFormBody } from "@/components/Inspector/ItemFormBody";
 import { styles } from "@/components/Shared/styles";
 import type {
   ChallengeResponse,
@@ -13,33 +13,37 @@ import type {
 } from "@/types/game";
 import { getChallengeTypeLabel } from "@/utils/challengeDisplay";
 import { colors } from "@/utils/colors";
-import { CHALLENGE_TYPES, confirmDelete, parsePositiveInteger } from "@/utils/setupHelpers";
+import { confirmDelete, parsePositiveInteger } from "@/utils/setupHelpers";
 
 export function CreationInspector({
   challenge,
   isMutating,
+  onCoordinateChange,
   onDeleteChallenge,
   onDeleteStation,
+  onEditingChange,
   onPatchChallenge,
   onPatchStation,
+  pendingCoords,
   station,
 }: {
   challenge?: ChallengeResponse | null;
   isMutating: boolean;
+  onCoordinateChange?: (x: number, y: number) => void;
   onDeleteChallenge: (id: string) => Promise<void>;
   onDeleteStation: (id: string) => Promise<void>;
+  onEditingChange?: (isEditing: boolean) => void;
   onPatchChallenge: (id: string, body: PatchChallengeRequest) => Promise<void>;
   onPatchStation: (id: string, body: PatchStationRequest) => Promise<void>;
+  pendingCoords?: { x: number; y: number } | null;
   station?: StationStateResponse | null;
 }) {
   const [isEditing, setIsEditing] = useState(false);
 
-  // Station edit state
   const [stationName, setStationName] = useState("");
   const [stationX, setStationX] = useState("");
   const [stationY, setStationY] = useState("");
 
-  // Challenge edit state
   const [challengeName, setChallengeName] = useState("");
   const [challengeDescription, setChallengeDescription] = useState("");
   const [challengeChips, setChallengeChips] = useState("");
@@ -53,16 +57,49 @@ export function CreationInspector({
     setIsEditing(false);
   }, [selectedId]);
 
+  // Auto-enter edit mode on first drag; sync x/y on subsequent drags.
+  // Intentionally omits isEditing/station/challenge from deps — only re-runs when coords change.
+  useEffect(() => {
+    if (!pendingCoords) return;
+    if (!isEditing) {
+      if (station) {
+        setStationName(station.name);
+        setStationX(String(pendingCoords.x));
+        setStationY(String(pendingCoords.y));
+        setIsEditing(true);
+      } else if (challenge) {
+        setChallengeName(challenge.name);
+        setChallengeDescription(challenge.description);
+        setChallengeChips(String(challenge.reward));
+        setChallengeType(challenge.challengeType);
+        setChallengeX(String(pendingCoords.x));
+        setChallengeY(String(pendingCoords.y));
+        setIsEditing(true);
+      }
+    } else {
+      if (station) {
+        setStationX(String(pendingCoords.x));
+        setStationY(String(pendingCoords.y));
+      } else if (challenge) {
+        setChallengeX(String(pendingCoords.x));
+        setChallengeY(String(pendingCoords.y));
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingCoords]);
+
   if (station) {
     const enterEdit = () => {
       setStationName(station.name);
       setStationX(String(station.xCoordinate));
       setStationY(String(station.yCoordinate));
       setIsEditing(true);
+      onEditingChange?.(true);
     };
 
     const cancelEdit = () => {
       setIsEditing(false);
+      onEditingChange?.(false);
     };
 
     const saveEdit = async () => {
@@ -72,50 +109,42 @@ export function CreationInspector({
       if (!trimmedName || xCoordinate === null || yCoordinate === null) return;
       await onPatchStation(station.id, { name: trimmedName, xCoordinate, yCoordinate });
       setIsEditing(false);
+      onEditingChange?.(false);
     };
 
-    const handleDelete = () => {
-      confirmDelete(station.name, () => onDeleteStation(station.id));
+    const handleDelete = () => confirmDelete(station.name, () => onDeleteStation(station.id));
+
+    const handleStationXChange = (text: string) => {
+      setStationX(text);
+      const parsedX = parseInt(text, 10);
+      const parsedY = parseInt(stationY, 10);
+      if (parsedX > 0 && parsedY > 0) onCoordinateChange?.(parsedX, parsedY);
+    };
+
+    const handleStationYChange = (text: string) => {
+      setStationY(text);
+      const parsedX = parseInt(stationX, 10);
+      const parsedY = parseInt(text, 10);
+      if (parsedX > 0 && parsedY > 0) onCoordinateChange?.(parsedX, parsedY);
     };
 
     if (isEditing) {
       return (
         <View style={styles.panel}>
           <Text style={styles.panelTitle}>Edit station</Text>
-          <View style={styles.setupSection}>
-            <Text style={styles.formLabel}>Name</Text>
-            <TextInput
-              onChangeText={setStationName}
-              placeholder="Station name"
-              placeholderTextColor="#8a94a6"
-              style={styles.menuInput}
-              value={stationName}
-            />
-            <View style={styles.setupCoordinateRow}>
-              <TextInput
-                inputMode="numeric"
-                keyboardType="number-pad"
-                onChangeText={setStationX}
-                placeholder="X"
-                placeholderTextColor="#8a94a6"
-                style={[styles.menuInput, styles.setupCoordinateInput]}
-                value={stationX}
-              />
-              <TextInput
-                inputMode="numeric"
-                keyboardType="number-pad"
-                onChangeText={setStationY}
-                placeholder="Y"
-                placeholderTextColor="#8a94a6"
-                style={[styles.menuInput, styles.setupCoordinateInput]}
-                value={stationY}
-              />
-            </View>
-            <PrimaryButton disabled={isMutating} icon="save" label={isMutating ? "Saving..." : "Save"} onPress={saveEdit} />
-            <Pressable onPress={cancelEdit} style={{ alignItems: "center", marginTop: 10 }}>
-              <Text style={{ color: colors.muted, fontSize: 14 }}>Cancel</Text>
-            </Pressable>
-          </View>
+          <ItemFormBody
+            isMutating={isMutating}
+            name={stationName}
+            onCancel={cancelEdit}
+            onDelete={handleDelete}
+            onNameChange={setStationName}
+            onSave={saveEdit}
+            onXChange={handleStationXChange}
+            onYChange={handleStationYChange}
+            type="STATION"
+            xStr={stationX}
+            yStr={stationY}
+          />
         </View>
       );
     }
@@ -160,10 +189,12 @@ export function CreationInspector({
       setChallengeX(String(challenge.xCoordinate));
       setChallengeY(String(challenge.yCoordinate));
       setIsEditing(true);
+      onEditingChange?.(true);
     };
 
     const cancelEdit = () => {
       setIsEditing(false);
+      onEditingChange?.(false);
     };
 
     const saveEdit = async () => {
@@ -173,92 +204,50 @@ export function CreationInspector({
       const xCoordinate = parsePositiveInteger(challengeX, "Challenge x coordinate");
       const yCoordinate = parsePositiveInteger(challengeY, "Challenge y coordinate");
       if (!trimmedName || !trimmedDescription || reward === null || xCoordinate === null || yCoordinate === null) return;
-      await onPatchChallenge(challenge.id, {
-        name: trimmedName,
-        description: trimmedDescription,
-        reward,
-        challengeType,
-        xCoordinate,
-        yCoordinate,
-      });
+      await onPatchChallenge(challenge.id, { name: trimmedName, description: trimmedDescription, reward, challengeType, xCoordinate, yCoordinate });
       setIsEditing(false);
+      onEditingChange?.(false);
     };
 
-    const handleDelete = () => {
-      confirmDelete(challenge.name, () => onDeleteChallenge(challenge.id));
+    const handleDelete = () => confirmDelete(challenge.name, () => onDeleteChallenge(challenge.id));
+
+    const handleChallengeXChange = (text: string) => {
+      setChallengeX(text);
+      const parsedX = parseInt(text, 10);
+      const parsedY = parseInt(challengeY, 10);
+      if (parsedX > 0 && parsedY > 0) onCoordinateChange?.(parsedX, parsedY);
+    };
+
+    const handleChallengeYChange = (text: string) => {
+      setChallengeY(text);
+      const parsedX = parseInt(challengeX, 10);
+      const parsedY = parseInt(text, 10);
+      if (parsedX > 0 && parsedY > 0) onCoordinateChange?.(parsedX, parsedY);
     };
 
     if (isEditing) {
       return (
         <View style={styles.panel}>
           <Text style={styles.panelTitle}>Edit challenge</Text>
-          <View style={styles.setupSection}>
-            <Text style={styles.formLabel}>Name</Text>
-            <TextInput
-              onChangeText={setChallengeName}
-              placeholder="Challenge name"
-              placeholderTextColor="#8a94a6"
-              style={styles.menuInput}
-              value={challengeName}
-            />
-            <Text style={styles.formLabel}>Description</Text>
-            <TextInput
-              multiline
-              onChangeText={setChallengeDescription}
-              placeholder="Description"
-              placeholderTextColor="#8a94a6"
-              style={[styles.menuInput, styles.setupDescriptionInput]}
-              value={challengeDescription}
-            />
-            <Text style={styles.formLabel}>Chips / value</Text>
-            <TextInput
-              inputMode="numeric"
-              keyboardType="number-pad"
-              onChangeText={setChallengeChips}
-              placeholder="Chips"
-              placeholderTextColor="#8a94a6"
-              style={styles.menuInput}
-              value={challengeChips}
-            />
-            <Text style={styles.formLabel}>Type</Text>
-            <View style={styles.colorSwatchRow}>
-              {CHALLENGE_TYPES.map((type) => (
-                <Pressable
-                  accessibilityLabel={`Use challenge type ${type}`}
-                  accessibilityRole="button"
-                  key={type}
-                  onPress={() => setChallengeType(type)}
-                  style={[styles.teamOption, challengeType === type && styles.setupOptionSelected]}
-                >
-                  <Text style={styles.teamOptionText}>{getChallengeTypeLabel(type)}</Text>
-                </Pressable>
-              ))}
-            </View>
-            <View style={styles.setupCoordinateRow}>
-              <TextInput
-                inputMode="numeric"
-                keyboardType="number-pad"
-                onChangeText={setChallengeX}
-                placeholder="X"
-                placeholderTextColor="#8a94a6"
-                style={[styles.menuInput, styles.setupCoordinateInput]}
-                value={challengeX}
-              />
-              <TextInput
-                inputMode="numeric"
-                keyboardType="number-pad"
-                onChangeText={setChallengeY}
-                placeholder="Y"
-                placeholderTextColor="#8a94a6"
-                style={[styles.menuInput, styles.setupCoordinateInput]}
-                value={challengeY}
-              />
-            </View>
-            <PrimaryButton disabled={isMutating} icon="save" label={isMutating ? "Saving..." : "Save"} onPress={saveEdit} />
-            <Pressable onPress={cancelEdit} style={{ alignItems: "center", marginTop: 10 }}>
-              <Text style={{ color: colors.muted, fontSize: 14 }}>Cancel</Text>
-            </Pressable>
-          </View>
+          <ItemFormBody
+            challengeType={challengeType}
+            chips={challengeChips}
+            description={challengeDescription}
+            isMutating={isMutating}
+            name={challengeName}
+            onCancel={cancelEdit}
+            onChallengeTypeChange={setChallengeType}
+            onChipsChange={setChallengeChips}
+            onDelete={handleDelete}
+            onDescriptionChange={setChallengeDescription}
+            onNameChange={setChallengeName}
+            onSave={saveEdit}
+            onXChange={handleChallengeXChange}
+            onYChange={handleChallengeYChange}
+            type="CHALLENGE"
+            xStr={challengeX}
+            yStr={challengeY}
+          />
         </View>
       );
     }

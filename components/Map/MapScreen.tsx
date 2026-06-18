@@ -1,5 +1,5 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Pressable, Text, useWindowDimensions, View } from "react-native";
 
@@ -87,9 +87,17 @@ export function MapScreen({
   const [pendingCreationType, setPendingCreationType] = useState<"STATION" | "CHALLENGE" | null>(null);
   const [pendingGameX, setPendingGameX] = useState(0);
   const [pendingGameY, setPendingGameY] = useState(0);
+  const [pendingReward, setPendingReward] = useState<number | null>(null);
+
+  // Edit marker state
+  const [isEditingItem, setIsEditingItem] = useState(false);
+  // editingCoords: position of the draggable edit marker (set from item coords, updated by drag/form)
+  const [editingCoords, setEditingCoords] = useState<{ x: number; y: number } | null>(null);
+  // draggedCoords: set only after a drag while editing — syncs x/y fields in CreationInspector
+  const [draggedCoords, setDraggedCoords] = useState<{ x: number; y: number } | null>(null);
 
   const pendingCreation = pendingCreationType
-    ? { type: pendingCreationType, gameX: pendingGameX, gameY: pendingGameY }
+    ? { type: pendingCreationType, gameX: pendingGameX, gameY: pendingGameY, reward: pendingReward ?? undefined }
     : null;
 
   const teamsById = mapTeamsById(teams);
@@ -124,6 +132,40 @@ export function MapScreen({
     teamsById,
   });
 
+  // Sync editingCoords from the selected item whenever the selection changes
+  const effectSelectedStationId = selectedStation?.id ?? null;
+  const effectSelectedChallengeId = selectedChallenge?.id ?? null;
+  useEffect(() => {
+    if (selectedStation) {
+      setEditingCoords({ x: selectedStation.xCoordinate, y: selectedStation.yCoordinate });
+    } else if (selectedChallenge) {
+      setEditingCoords({ x: selectedChallenge.xCoordinate, y: selectedChallenge.yCoordinate });
+    } else {
+      setEditingCoords(null);
+    }
+    setDraggedCoords(null);
+    setIsEditingItem(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [effectSelectedStationId, effectSelectedChallengeId]);
+
+  const handleEditingChange = (editing: boolean) => {
+    setIsEditingItem(editing);
+    if (!editing) setDraggedCoords(null);
+  };
+
+  // editingItem: drives the draggable edit marker and excludes the static marker.
+  // Only active once the user has clicked Edit — not on mere selection.
+  const editingItem =
+    isGameCreated && isEditingItem && editingCoords && (selectedStation || selectedChallenge)
+      ? {
+          type: (selectedStation ? "STATION" : "CHALLENGE") as "STATION" | "CHALLENGE",
+          gameX: editingCoords.x,
+          gameY: editingCoords.y,
+          reward: selectedChallenge?.reward,
+          excludeId: selectedStation?.id ?? selectedChallenge?.id ?? "",
+        }
+      : null;
+
   const handleEmptyMapTap = (gameX: number, gameY: number, viewportX: number, viewportY: number) => {
     setPendingTap({ viewportX, viewportY, gameX, gameY });
     setPendingCreationType(null);
@@ -141,6 +183,7 @@ export function MapScreen({
   const handleCancelCreation = () => {
     setPendingCreationType(null);
     setPendingTap(null);
+    setPendingReward(null);
   };
 
   const handlePendingMarkerDragEnd = (gameX: number, gameY: number) => {
@@ -151,6 +194,15 @@ export function MapScreen({
   const handleCoordinateChange = (x: number, y: number) => {
     setPendingGameX(x);
     setPendingGameY(y);
+  };
+
+  const handleEditMarkerDragEnd = (gameX: number, gameY: number) => {
+    setEditingCoords({ x: gameX, y: gameY });
+    setDraggedCoords({ x: gameX, y: gameY });
+  };
+
+  const handleEditCoordinateChange = (x: number, y: number) => {
+    setEditingCoords({ x, y });
   };
 
   const handleSelectMapItemsWrapped = (items: MapSelectableItem[]) => {
@@ -177,6 +229,7 @@ export function MapScreen({
           onCoordinateChange={handleCoordinateChange}
           onCreateChallenge={onCreateChallenge}
           onCreateStation={onCreateStation}
+          onRewardChange={setPendingReward}
           type={pendingCreationType}
         />
       );
@@ -189,12 +242,15 @@ export function MapScreen({
         isMutating={isMutating}
         onAddStationChips={onAddStationChips}
         onCompleteChallenge={onCompleteChallenge}
+        onCoordinateChange={handleEditCoordinateChange}
         onDeleteChallenge={onDeleteChallenge}
         onDeleteStation={onDeleteStation}
+        onEditingChange={handleEditingChange}
         onFailChallenge={onFailChallenge}
         onPatchChallenge={onPatchChallenge}
         onPatchStation={onPatchStation}
         onStartChallenge={onStartChallenge}
+        pendingCoords={draggedCoords}
         selectedTeamId={selectedTeamId}
         station={selectedStation}
         teamsById={teamsById}
@@ -233,7 +289,9 @@ export function MapScreen({
         >
           <MapViewport
             challenges={challenges}
+            editingItem={editingItem}
             gameState={gameState}
+            onEditMarkerDragEnd={handleEditMarkerDragEnd}
             onEmptyMapTap={isGameCreated ? handleEmptyMapTap : undefined}
             onHoverChange={onHoverChange}
             onPendingMarkerDragEnd={handlePendingMarkerDragEnd}

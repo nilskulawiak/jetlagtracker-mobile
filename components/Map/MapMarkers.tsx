@@ -8,6 +8,7 @@ import { getChallengeValueLabel } from "@/utils/challengeDisplay";
 
 export function ChallengeMarkers({
   challenges,
+  excludeChallengeId,
   mapHeight,
   mapWidth,
   renderedMapHeight,
@@ -16,6 +17,7 @@ export function ChallengeMarkers({
   showCreatedChallenges = false,
 }: {
   challenges: ChallengeResponse[];
+  excludeChallengeId?: string;
   mapHeight: number;
   mapWidth: number;
   renderedMapHeight: number;
@@ -23,7 +25,12 @@ export function ChallengeMarkers({
   selectedChallengeId: string | null;
   showCreatedChallenges?: boolean;
 }) {
-  return challenges.filter((challenge) => showCreatedChallenges || isChallengeVisible(challenge.status)).map((challenge) => (
+  return challenges
+    .filter((challenge) =>
+      (showCreatedChallenges || isChallengeVisible(challenge.status)) &&
+      challenge.id !== excludeChallengeId,
+    )
+    .map((challenge) => (
     <View
       accessibilityLabel={`${challenge.name}, ${getChallengeValueLabel(challenge)}`}
       key={challenge.id}
@@ -51,6 +58,7 @@ export function ChallengeMarkers({
 }
 
 export function StationMarkers({
+  excludeStationId,
   mapHeight,
   mapWidth,
   renderedMapHeight,
@@ -59,6 +67,7 @@ export function StationMarkers({
   stations,
   teamsById,
 }: {
+  excludeStationId?: string;
   mapHeight: number;
   mapWidth: number;
   renderedMapHeight: number;
@@ -67,7 +76,7 @@ export function StationMarkers({
   stations: StationStateResponse[];
   teamsById: Map<string, TeamResponse>;
 }) {
-  return stations.map((station) => {
+  return stations.filter((station) => station.id !== excludeStationId).map((station) => {
     const owner = station.ownerTeamId ? teamsById.get(station.ownerTeamId) : undefined;
 
     return (

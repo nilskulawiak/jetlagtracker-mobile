@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Text, View } from "react-native";
 
-import { PrimaryButton } from "@/components/Shared/Buttons";
+import { ItemFormBody } from "@/components/Inspector/ItemFormBody";
 import { styles } from "@/components/Shared/styles";
 import type { ChallengeType, CreateChallengeRequest, CreateStationRequest } from "@/types/game";
-import { getChallengeTypeLabel } from "@/utils/challengeDisplay";
-import { colors } from "@/utils/colors";
 import { CHALLENGE_TYPES, parsePositiveInteger } from "@/utils/setupHelpers";
 
 export function MapCreationForm({
@@ -16,6 +14,7 @@ export function MapCreationForm({
   onCoordinateChange,
   onCreateChallenge,
   onCreateStation,
+  onRewardChange,
   type,
 }: {
   gameX: number;
@@ -25,6 +24,7 @@ export function MapCreationForm({
   onCoordinateChange: (x: number, y: number) => void;
   onCreateChallenge: (body: CreateChallengeRequest) => Promise<void>;
   onCreateStation: (body: CreateStationRequest) => Promise<void>;
+  onRewardChange?: (reward: number | null) => void;
   type: "STATION" | "CHALLENGE";
 }) {
   const [name, setName] = useState("");
@@ -34,7 +34,6 @@ export function MapCreationForm({
   const [xStr, setXStr] = useState(String(gameX));
   const [yStr, setYStr] = useState(String(gameY));
 
-  // Sync x/y text when parent updates (e.g. marker drag)
   useEffect(() => { setXStr(String(gameX)); }, [gameX]);
   useEffect(() => { setYStr(String(gameY)); }, [gameY]);
 
@@ -54,12 +53,17 @@ export function MapCreationForm({
     }
   };
 
+  const handleChipsChange = (text: string) => {
+    setChips(text);
+    const parsed = parseInt(text, 10);
+    onRewardChange?.(Number.isInteger(parsed) && parsed > 0 ? parsed : null);
+  };
+
   const handleSave = async () => {
     const trimmedName = name.trim();
     const xCoordinate = parsePositiveInteger(xStr, "X coordinate");
     const yCoordinate = parsePositiveInteger(yStr, "Y coordinate");
-    if (!trimmedName) { return; }
-    if (xCoordinate === null || yCoordinate === null) return;
+    if (!trimmedName || xCoordinate === null || yCoordinate === null) return;
 
     if (type === "STATION") {
       await onCreateStation({ name: trimmedName, xCoordinate, yCoordinate });
@@ -83,83 +87,27 @@ export function MapCreationForm({
   return (
     <View style={styles.panel}>
       <Text style={styles.panelTitle}>{type === "STATION" ? "New station" : "New challenge"}</Text>
-
-      <View style={styles.setupSection}>
-        <TextInput
-          autoFocus
-          onChangeText={setName}
-          placeholder={type === "STATION" ? "Station name" : "Challenge name"}
-          placeholderTextColor="#8a94a6"
-          style={styles.menuInput}
-          value={name}
-        />
-
-        {type === "CHALLENGE" ? (
-          <>
-            <TextInput
-              multiline
-              onChangeText={setDescription}
-              placeholder="Description"
-              placeholderTextColor="#8a94a6"
-              style={[styles.menuInput, styles.setupDescriptionInput]}
-              value={description}
-            />
-            <TextInput
-              inputMode="numeric"
-              keyboardType="number-pad"
-              onChangeText={setChips}
-              placeholder="Chips / value"
-              placeholderTextColor="#8a94a6"
-              style={styles.menuInput}
-              value={chips}
-            />
-            <View style={styles.colorSwatchRow}>
-              {CHALLENGE_TYPES.map((t) => (
-                <Pressable
-                  accessibilityLabel={`Challenge type ${t}`}
-                  accessibilityRole="button"
-                  key={t}
-                  onPress={() => setChallengeType(t)}
-                  style={[styles.teamOption, challengeType === t && styles.setupOptionSelected]}
-                >
-                  <Text style={styles.teamOptionText}>{getChallengeTypeLabel(t)}</Text>
-                </Pressable>
-              ))}
-            </View>
-          </>
-        ) : null}
-
-        <View style={styles.setupCoordinateRow}>
-          <TextInput
-            inputMode="numeric"
-            keyboardType="number-pad"
-            onChangeText={handleXChange}
-            placeholder="X"
-            placeholderTextColor="#8a94a6"
-            style={[styles.menuInput, styles.setupCoordinateInput]}
-            value={xStr}
-          />
-          <TextInput
-            inputMode="numeric"
-            keyboardType="number-pad"
-            onChangeText={handleYChange}
-            placeholder="Y"
-            placeholderTextColor="#8a94a6"
-            style={[styles.menuInput, styles.setupCoordinateInput]}
-            value={yStr}
-          />
-        </View>
-
-        <PrimaryButton
-          disabled={isMutating}
-          icon={type === "STATION" ? "add-location-alt" : "add-task"}
-          label={isMutating ? "Saving..." : type === "STATION" ? "Add station" : "Add challenge"}
-          onPress={handleSave}
-        />
-        <Pressable onPress={onCancel} style={{ alignItems: "center", marginTop: 10 }}>
-          <Text style={{ color: colors.muted, fontSize: 14 }}>Cancel</Text>
-        </Pressable>
-      </View>
+      <ItemFormBody
+        autoFocusName
+        challengeType={challengeType}
+        chips={chips}
+        description={description}
+        isMutating={isMutating}
+        name={name}
+        onCancel={onCancel}
+        onChallengeTypeChange={setChallengeType}
+        onChipsChange={handleChipsChange}
+        onDescriptionChange={setDescription}
+        onNameChange={setName}
+        onSave={handleSave}
+        onXChange={handleXChange}
+        onYChange={handleYChange}
+        saveIcon={type === "STATION" ? "add-location-alt" : "add-task"}
+        saveLabel={type === "STATION" ? "Add station" : "Add challenge"}
+        type={type}
+        xStr={xStr}
+        yStr={yStr}
+      />
     </View>
   );
 }
