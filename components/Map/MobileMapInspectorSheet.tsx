@@ -10,6 +10,7 @@ import { colors } from "@/utils/colors";
 import type { MapSelectableItem } from "@/utils/mapSelection";
 
 export function MobileMapInspectorSheet({
+  creationPicker,
   isExpanded,
   nearbyItems,
   onSelectNearbyItem,
@@ -24,6 +25,7 @@ export function MobileMapInspectorSheet({
   teamsById,
   title,
 }: {
+  creationPicker?: ReactNode;
   isExpanded: boolean;
   nearbyItems: MapSelectableItem[];
   onSelectNearbyItem: (item: MapSelectableItem) => void;
@@ -42,11 +44,13 @@ export function MobileMapInspectorSheet({
     return null;
   }
 
+  const forceExpanded = Boolean(setupPanel) || Boolean(creationPicker);
+
   return (
     <View
       style={[
         mapStyles.mobileInspectorSheet,
-        isExpanded || setupPanel
+        isExpanded || forceExpanded
           ? mapStyles.mobileInspectorSheetExpanded
           : mapStyles.mobileInspectorSheetCollapsed,
       ]}
@@ -54,8 +58,8 @@ export function MobileMapInspectorSheet({
       <Pressable
         accessibilityLabel={isExpanded ? "Collapse inspector" : "Expand inspector"}
         accessibilityRole="button"
-        accessibilityState={{ expanded: isExpanded || Boolean(setupPanel) }}
-        disabled={Boolean(setupPanel)}
+        accessibilityState={{ expanded: isExpanded || forceExpanded }}
+        disabled={forceExpanded}
         onPress={onToggleExpanded}
         style={mapStyles.mobileInspectorHandle}
       >
@@ -69,7 +73,7 @@ export function MobileMapInspectorSheet({
               {subtitle}
             </Text>
           </View>
-          {setupPanel ? null : (
+          {forceExpanded ? null : (
             <MaterialIcons
               color={colors.textSoft}
               name={isExpanded ? "keyboard-arrow-down" : "keyboard-arrow-up"}
@@ -81,18 +85,20 @@ export function MobileMapInspectorSheet({
 
       <ScrollView
         contentContainerStyle={mapStyles.inspectorContent}
-        showsVerticalScrollIndicator={isExpanded || Boolean(setupPanel)}
+        showsVerticalScrollIndicator={isExpanded || forceExpanded}
         style={mapStyles.inspectorScroller}
       >
-        {setupPanel}
-        <NearbyItemsPicker
-          items={nearbyItems}
-          onSelectItem={onSelectNearbyItem}
-          selectedChallengeId={selectedChallengeId}
-          selectedStationId={selectedStationId}
-          stations={stations}
-          teamsById={teamsById}
-        />
+        {creationPicker ?? setupPanel}
+        {creationPicker ? null : (
+          <NearbyItemsPicker
+            items={nearbyItems}
+            onSelectItem={onSelectNearbyItem}
+            selectedChallengeId={selectedChallengeId}
+            selectedStationId={selectedStationId}
+            stations={stations}
+            teamsById={teamsById}
+          />
+        )}
         {renderInspector(true)}
       </ScrollView>
     </View>

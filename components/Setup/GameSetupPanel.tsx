@@ -5,15 +5,12 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { PrimaryButton } from "@/components/Shared/Buttons";
 import { styles } from "@/components/Shared/styles";
 import type {
-  CreateChallengeRequest,
-  CreateStationRequest,
   CreateTeamRequest,
   PatchTeamRequest,
   TeamResponse,
 } from "@/types/game";
 import { colors } from "@/utils/colors";
-import { getChallengeTypeLabel } from "@/utils/challengeDisplay";
-import { CHALLENGE_TYPES, TEAM_COLORS, confirmDelete, parsePositiveInteger } from "@/utils/setupHelpers";
+import { TEAM_COLORS, confirmDelete, parsePositiveInteger } from "@/utils/setupHelpers";
 
 function SectionHeader({
   label,
@@ -43,8 +40,6 @@ function SectionHeader({
 export function GameSetupPanel({
   challengeCount,
   isMutating,
-  onCreateChallenge,
-  onCreateStation,
   onCreateTeam,
   onDeleteTeam,
   onPatchTeam,
@@ -53,8 +48,6 @@ export function GameSetupPanel({
 }: {
   challengeCount: number;
   isMutating: boolean;
-  onCreateChallenge: (body: CreateChallengeRequest) => Promise<void>;
-  onCreateStation: (body: CreateStationRequest) => Promise<void>;
   onCreateTeam: (body: CreateTeamRequest) => Promise<void>;
   onDeleteTeam: (teamId: string) => Promise<void>;
   onPatchTeam: (teamId: string, body: PatchTeamRequest) => Promise<void>;
@@ -64,24 +57,11 @@ export function GameSetupPanel({
   const [numberOfChallenges, setNumberOfChallenges] = useState(String(Math.max(1, Math.min(3, challengeCount || 1))));
 
   const [isTeamFormOpen, setIsTeamFormOpen] = useState(false);
-  const [isStationFormOpen, setIsStationFormOpen] = useState(false);
-  const [isChallengeFormOpen, setIsChallengeFormOpen] = useState(false);
 
   const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
   const [teamColor, setTeamColor] = useState(TEAM_COLORS[0]);
   const [teamName, setTeamName] = useState("");
   const [teamStartingChips, setTeamStartingChips] = useState("");
-
-  const [stationName, setStationName] = useState("");
-  const [stationX, setStationX] = useState("");
-  const [stationY, setStationY] = useState("");
-
-  const [challengeName, setChallengeName] = useState("");
-  const [challengeDescription, setChallengeDescription] = useState("");
-  const [challengeChips, setChallengeChips] = useState("");
-  const [challengeType, setChallengeType] = useState(CHALLENGE_TYPES[0]);
-  const [challengeX, setChallengeX] = useState("");
-  const [challengeY, setChallengeY] = useState("");
 
   const startCreatedGame = async () => {
     const parsedNumberOfChallenges = parsePositiveInteger(numberOfChallenges, "Number of challenges");
@@ -136,45 +116,6 @@ export function GameSetupPanel({
 
   const handleDeleteTeam = (team: TeamResponse) => {
     confirmDelete(team.name, () => onDeleteTeam(team.id));
-  };
-
-  // Station submit (create only)
-  const submitStation = async () => {
-    const trimmedName = stationName.trim();
-    const xCoordinate = parsePositiveInteger(stationX, "Station x coordinate");
-    const yCoordinate = parsePositiveInteger(stationY, "Station y coordinate");
-    if (!trimmedName) { Alert.alert("Station name", "Enter a station name."); return; }
-    if (xCoordinate === null || yCoordinate === null) return;
-    await onCreateStation({ name: trimmedName, xCoordinate, yCoordinate });
-    setStationName("");
-    setStationX("");
-    setStationY("");
-  };
-
-  // Challenge submit (create only)
-  const submitChallenge = async () => {
-    const trimmedName = challengeName.trim();
-    const trimmedDescription = challengeDescription.trim();
-    const reward = parsePositiveInteger(challengeChips, "Challenge reward");
-    const xCoordinate = parsePositiveInteger(challengeX, "Challenge x coordinate");
-    const yCoordinate = parsePositiveInteger(challengeY, "Challenge y coordinate");
-    if (!trimmedName) { Alert.alert("Challenge name", "Enter a challenge name."); return; }
-    if (!trimmedDescription) { Alert.alert("Challenge description", "Enter a challenge description."); return; }
-    if (reward === null || xCoordinate === null || yCoordinate === null) return;
-    await onCreateChallenge({
-      reward,
-      challengeType,
-      description: trimmedDescription,
-      name: trimmedName,
-      status: "CREATED",
-      xCoordinate,
-      yCoordinate,
-    });
-    setChallengeName("");
-    setChallengeDescription("");
-    setChallengeChips("");
-    setChallengeX("");
-    setChallengeY("");
   };
 
   return (
@@ -281,125 +222,6 @@ export function GameSetupPanel({
         ) : null}
       </View>
 
-      <View style={styles.setupSection}>
-        <SectionHeader
-          label="Add station"
-          isOpen={isStationFormOpen}
-          onToggle={() => setIsStationFormOpen((v) => !v)}
-        />
-        {isStationFormOpen ? (
-          <View style={{ gap: 8, marginTop: 4 }}>
-            <TextInput
-              onChangeText={setStationName}
-              placeholder="Station name"
-              placeholderTextColor="#8a94a6"
-              style={styles.menuInput}
-              value={stationName}
-            />
-            <View style={styles.setupCoordinateRow}>
-              <TextInput
-                inputMode="numeric"
-                keyboardType="number-pad"
-                onChangeText={setStationX}
-                placeholder="X"
-                placeholderTextColor="#8a94a6"
-                style={[styles.menuInput, styles.setupCoordinateInput]}
-                value={stationX}
-              />
-              <TextInput
-                inputMode="numeric"
-                keyboardType="number-pad"
-                onChangeText={setStationY}
-                placeholder="Y"
-                placeholderTextColor="#8a94a6"
-                style={[styles.menuInput, styles.setupCoordinateInput]}
-                value={stationY}
-              />
-            </View>
-            <PrimaryButton
-              disabled={isMutating}
-              icon="add-location-alt"
-              label="Add station"
-              onPress={submitStation}
-            />
-          </View>
-        ) : null}
-      </View>
-
-      <View style={styles.setupSection}>
-        <SectionHeader
-          label="Add challenge"
-          isOpen={isChallengeFormOpen}
-          onToggle={() => setIsChallengeFormOpen((v) => !v)}
-        />
-        {isChallengeFormOpen ? (
-          <View style={{ gap: 8, marginTop: 4 }}>
-            <TextInput
-              onChangeText={setChallengeName}
-              placeholder="Challenge name"
-              placeholderTextColor="#8a94a6"
-              style={styles.menuInput}
-              value={challengeName}
-            />
-            <TextInput
-              multiline
-              onChangeText={setChallengeDescription}
-              placeholder="Description"
-              placeholderTextColor="#8a94a6"
-              style={[styles.menuInput, styles.setupDescriptionInput]}
-              value={challengeDescription}
-            />
-            <TextInput
-              inputMode="numeric"
-              keyboardType="number-pad"
-              onChangeText={setChallengeChips}
-              placeholder="Chips / value"
-              placeholderTextColor="#8a94a6"
-              style={styles.menuInput}
-              value={challengeChips}
-            />
-            <View style={styles.colorSwatchRow}>
-              {CHALLENGE_TYPES.map((type) => (
-                <Pressable
-                  accessibilityLabel={`Use challenge type ${type}`}
-                  accessibilityRole="button"
-                  key={type}
-                  onPress={() => setChallengeType(type)}
-                  style={[styles.teamOption, challengeType === type && styles.setupOptionSelected]}
-                >
-                  <Text style={styles.teamOptionText}>{getChallengeTypeLabel(type)}</Text>
-                </Pressable>
-              ))}
-            </View>
-            <View style={styles.setupCoordinateRow}>
-              <TextInput
-                inputMode="numeric"
-                keyboardType="number-pad"
-                onChangeText={setChallengeX}
-                placeholder="X"
-                placeholderTextColor="#8a94a6"
-                style={[styles.menuInput, styles.setupCoordinateInput]}
-                value={challengeX}
-              />
-              <TextInput
-                inputMode="numeric"
-                keyboardType="number-pad"
-                onChangeText={setChallengeY}
-                placeholder="Y"
-                placeholderTextColor="#8a94a6"
-                style={[styles.menuInput, styles.setupCoordinateInput]}
-                value={challengeY}
-              />
-            </View>
-            <PrimaryButton
-              disabled={isMutating}
-              icon="add-task"
-              label="Add challenge"
-              onPress={submitChallenge}
-            />
-          </View>
-        ) : null}
-      </View>
     </View>
   );
 }

@@ -55,6 +55,8 @@ export function DesktopGameLayout({
         onPatchChallenge={gameActions.patchChallenge}
         onPatchStation={gameActions.patchStation}
         onStartChallenge={gameActions.startChallenge}
+        onCreateChallenge={gameActions.createChallenge}
+        onCreateStation={gameActions.createStation}
         onHoverChange={() => undefined}
         selectedTeamId={selectedTeamId}
         setupPanel={
@@ -62,8 +64,6 @@ export function DesktopGameLayout({
             <GameSetupPanel
               challengeCount={createdChallengeCount}
               isMutating={isMutating}
-              onCreateChallenge={gameActions.createChallenge}
-              onCreateStation={gameActions.createStation}
               onCreateTeam={gameActions.createTeam}
               onDeleteTeam={gameActions.deleteTeam}
               onPatchTeam={gameActions.patchTeam}
