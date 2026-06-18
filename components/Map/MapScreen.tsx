@@ -127,6 +127,7 @@ export function MapScreen({
   const handleEmptyMapTap = (gameX: number, gameY: number, viewportX: number, viewportY: number) => {
     setPendingTap({ viewportX, viewportY, gameX, gameY });
     setPendingCreationType(null);
+    handleSelectMapItems([]);
   };
 
   const handlePickType = (type: "STATION" | "CHALLENGE") => {
