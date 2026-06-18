@@ -39,6 +39,7 @@ export function useMapViewportTransform({
   gameState,
   mapHeight,
   mapWidth,
+  onEmptyMapTap,
   onHoverChange,
   onSelectMapItems,
   stations,
@@ -48,6 +49,7 @@ export function useMapViewportTransform({
   gameState: GameState;
   mapHeight: number;
   mapWidth: number;
+  onEmptyMapTap?: (gameX: number, gameY: number, viewportX: number, viewportY: number) => void;
   onHoverChange: (isHovered: boolean) => void;
   onSelectMapItems: (items: MapSelectableItem[]) => void;
   stations: StationStateResponse[];
@@ -219,7 +221,13 @@ export function useMapViewportTransform({
       tapMapY,
     });
 
-    onSelectMapItems(items);
+    if (items.length === 0 && gameState.game.status === "CREATED" && onEmptyMapTap) {
+      const gameX = Math.round((tapMapX / renderedMapWidth) * mapWidth);
+      const gameY = Math.round((tapMapY / renderedMapHeight) * mapHeight);
+      onEmptyMapTap(gameX, gameY, tapX, tapY);
+    } else {
+      onSelectMapItems(items);
+    }
   };
 
   const panGesture = Gesture.Pan()
@@ -317,11 +325,13 @@ export function useMapViewportTransform({
     fitScale,
     handleViewportLayout,
     mapGesture,
+    mapPanGesture: panGesture,
     mapTransformStyle,
     mapViewportRef,
     mapWebWheelProps,
     renderedMapHeight,
     renderedMapWidth,
     resetMapView,
+    scale,
   };
 }

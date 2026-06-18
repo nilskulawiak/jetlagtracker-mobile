@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { Pressable, Text, useWindowDimensions, View } from "react-native";
 
+import { MapCreationForm } from "@/components/Inspector/MapCreationForm";
 import { Inspector } from "@/components/Inspector/Inspector";
 import { DesktopMapSidebar } from "@/components/Map/DesktopMapSidebar";
 import { mapStyles } from "@/components/Map/mapStyles";
@@ -13,6 +14,8 @@ import { useMapSelection } from "@/components/Map/useMapSelection";
 import { useGameSelection } from "@/hooks/useGameSelection";
 import type {
   ChallengeResponse,
+  CreateChallengeRequest,
+  CreateStationRequest,
   FinishChallengeRequest,
   GameActionResponse,
   GameState,
@@ -24,6 +27,7 @@ import type {
 } from "@/types/game";
 import { colors } from "@/utils/colors";
 import { mapTeamsById } from "@/utils/gameSelectors";
+import type { MapSelectableItem } from "@/utils/mapSelection";
 
 export function MapScreen({
   actions,
@@ -33,6 +37,8 @@ export function MapScreen({
   isMutating,
   onAddStationChips,
   onCompleteChallenge,
+  onCreateChallenge,
+  onCreateStation,
   onDeleteChallenge,
   onDeleteStation,
   onFailChallenge,
@@ -52,6 +58,8 @@ export function MapScreen({
   isMutating: boolean;
   onAddStationChips: (stationId: string, body: { chips: number; teamId: string }) => Promise<void>;
   onCompleteChallenge: (challengeId: string, body: FinishChallengeRequest) => Promise<void>;
+  onCreateChallenge: (body: CreateChallengeRequest) => Promise<void>;
+  onCreateStation: (body: CreateStationRequest) => Promise<void>;
   onDeleteChallenge: (id: string) => Promise<void>;
   onDeleteStation: (id: string) => Promise<void>;
   onFailChallenge: (challengeId: string, body: FinishChallengeRequest) => Promise<void>;
@@ -67,6 +75,23 @@ export function MapScreen({
   const { width } = useWindowDimensions();
   const isMobileLayout = width < 700;
   const [isLegendVisible, setIsLegendVisible] = useState(false);
+  const [viewportSlotSize, setViewportSlotSize] = useState({ width: 0, height: 0 });
+
+  // Pending creation state
+  const [pendingTap, setPendingTap] = useState<{
+    viewportX: number;
+    viewportY: number;
+    gameX: number;
+    gameY: number;
+  } | null>(null);
+  const [pendingCreationType, setPendingCreationType] = useState<"STATION" | "CHALLENGE" | null>(null);
+  const [pendingGameX, setPendingGameX] = useState(0);
+  const [pendingGameY, setPendingGameY] = useState(0);
+
+  const pendingCreation = pendingCreationType
+    ? { type: pendingCreationType, gameX: pendingGameX, gameY: pendingGameY }
+    : null;
+
   const teamsById = mapTeamsById(teams);
   const {
     clearMapSelection,
@@ -99,34 +124,120 @@ export function MapScreen({
     teamsById,
   });
 
-  const renderInspector = (hideHeader = false) => (
-    <Inspector
-      challenge={selectedChallenge}
-      hideHeader={hideHeader}
-      isGameCreated={isGameCreated}
-      isMutating={isMutating}
-      onAddStationChips={onAddStationChips}
-      onCompleteChallenge={onCompleteChallenge}
-      onDeleteChallenge={onDeleteChallenge}
-      onDeleteStation={onDeleteStation}
-      onFailChallenge={onFailChallenge}
-      onPatchChallenge={onPatchChallenge}
-      onPatchStation={onPatchStation}
-      onStartChallenge={onStartChallenge}
-      selectedTeamId={selectedTeamId}
-      station={selectedStation}
-      teamsById={teamsById}
-    />
-  );
+  const handleEmptyMapTap = (gameX: number, gameY: number, viewportX: number, viewportY: number) => {
+    setPendingTap({ viewportX, viewportY, gameX, gameY });
+    setPendingCreationType(null);
+  };
+
+  const handlePickType = (type: "STATION" | "CHALLENGE") => {
+    if (!pendingTap) return;
+    setPendingCreationType(type);
+    setPendingGameX(pendingTap.gameX);
+    setPendingGameY(pendingTap.gameY);
+    setPendingTap(null);
+  };
+
+  const handleCancelCreation = () => {
+    setPendingCreationType(null);
+    setPendingTap(null);
+  };
+
+  const handlePendingMarkerDragEnd = (gameX: number, gameY: number) => {
+    setPendingGameX(gameX);
+    setPendingGameY(gameY);
+  };
+
+  const handleCoordinateChange = (x: number, y: number) => {
+    setPendingGameX(x);
+    setPendingGameY(y);
+  };
+
+  const handleSelectMapItemsWrapped = (items: MapSelectableItem[]) => {
+    if (items.length > 0) {
+      setPendingTap(null);
+      setPendingCreationType(null);
+    }
+    handleSelectMapItems(items);
+  };
+
+  const sheetTitle = pendingCreationType
+    ? pendingCreationType === "STATION" ? "New station" : "New challenge"
+    : pendingTap ? "Place on map" : mobileSheetTitle;
+  const sheetSubtitle = pendingCreationType || pendingTap ? "" : mobileSheetSubtitle;
+
+  const renderInspector = (hideHeader = false) => {
+    if (pendingCreationType) {
+      return (
+        <MapCreationForm
+          gameX={pendingGameX}
+          gameY={pendingGameY}
+          isMutating={isMutating}
+          onCancel={handleCancelCreation}
+          onCoordinateChange={handleCoordinateChange}
+          onCreateChallenge={onCreateChallenge}
+          onCreateStation={onCreateStation}
+          type={pendingCreationType}
+        />
+      );
+    }
+    return (
+      <Inspector
+        challenge={selectedChallenge}
+        hideHeader={hideHeader}
+        isGameCreated={isGameCreated}
+        isMutating={isMutating}
+        onAddStationChips={onAddStationChips}
+        onCompleteChallenge={onCompleteChallenge}
+        onDeleteChallenge={onDeleteChallenge}
+        onDeleteStation={onDeleteStation}
+        onFailChallenge={onFailChallenge}
+        onPatchChallenge={onPatchChallenge}
+        onPatchStation={onPatchStation}
+        onStartChallenge={onStartChallenge}
+        selectedTeamId={selectedTeamId}
+        station={selectedStation}
+        teamsById={teamsById}
+      />
+    );
+  };
+
+  const creationPickerNode = pendingTap ? (
+    <View style={{ gap: 6, paddingBottom: 8, paddingTop: 4 }}>
+      <Text style={mapStyles.pickerTitle}>Add to map</Text>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => handlePickType("STATION")}
+        style={mapStyles.pickerOption}
+      >
+        <MaterialIcons color={colors.ink} name="add-location-alt" size={20} />
+        <Text style={mapStyles.pickerOptionText}>Add station</Text>
+      </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => handlePickType("CHALLENGE")}
+        style={mapStyles.pickerOption}
+      >
+        <MaterialIcons color={colors.ink} name="add-task" size={20} />
+        <Text style={mapStyles.pickerOptionText}>Add challenge</Text>
+      </Pressable>
+    </View>
+  ) : null;
+
   return (
     <View style={[mapStyles.workspace, !isMobileLayout && mapStyles.workspaceWide, isMobileLayout && mapStyles.mobileWorkspace]}>
       <View style={[mapStyles.mainPane, isMobileLayout && mapStyles.mobileMainPane]}>
-        <View style={mapStyles.viewportSlot}>
+        <View
+          onLayout={(e) => setViewportSlotSize({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height })}
+          style={mapStyles.viewportSlot}
+        >
           <MapViewport
             challenges={challenges}
             gameState={gameState}
+            onEmptyMapTap={isGameCreated ? handleEmptyMapTap : undefined}
             onHoverChange={onHoverChange}
-            onSelectMapItems={handleSelectMapItems}
+            onPendingMarkerDragEnd={handlePendingMarkerDragEnd}
+            onSelectMapItems={handleSelectMapItemsWrapped}
+            pendingCreation={pendingCreation}
             selectedChallengeId={selectedChallengeId}
             selectedStationId={selectedStationId}
             stations={stations}
@@ -158,12 +269,50 @@ export function MapScreen({
               <MapLegend teams={teams} />
             </View>
           )}
+
+          {pendingTap && !isMobileLayout ? (
+            <View
+              style={{
+                backgroundColor: colors.panel,
+                borderColor: colors.line,
+                borderRadius: 8,
+                borderWidth: 1,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                gap: 6,
+                left: Math.min(pendingTap.viewportX + 8, Math.max(8, viewportSlotSize.width - 204)),
+                padding: 10,
+                position: "absolute",
+                top: Math.min(pendingTap.viewportY + 8, Math.max(8, viewportSlotSize.height - 116)),
+                width: 196,
+                zIndex: 20,
+              }}
+            >
+              <Text style={mapStyles.pickerTitle}>Add to map</Text>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => handlePickType("STATION")}
+                style={mapStyles.pickerOption}
+              >
+                <MaterialIcons color={colors.ink} name="add-location-alt" size={20} />
+                <Text style={mapStyles.pickerOptionText}>Add station</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => handlePickType("CHALLENGE")}
+                style={mapStyles.pickerOption}
+              >
+                <MaterialIcons color={colors.ink} name="add-task" size={20} />
+                <Text style={mapStyles.pickerOptionText}>Add challenge</Text>
+              </Pressable>
+            </View>
+          ) : null}
         </View>
       </View>
 
       {isMobileLayout ? (
         <MobileMapInspectorSheet
-          isExpanded={isInspectorExpanded}
+          creationPicker={creationPickerNode}
+          isExpanded={isInspectorExpanded || Boolean(pendingCreationType)}
           nearbyItems={nearbyItems}
           onSelectNearbyItem={selectNearbyItem}
           onToggleExpanded={() => setIsInspectorExpanded((value) => !value)}
@@ -171,11 +320,11 @@ export function MapScreen({
           selectedChallengeId={selectedChallengeId}
           selectedStationId={selectedStationId}
           setupPanel={setupPanel}
-          shouldShow={showMobileSheet}
+          shouldShow={showMobileSheet || Boolean(pendingTap) || Boolean(pendingCreationType)}
           stations={stations}
-          subtitle={mobileSheetSubtitle}
+          subtitle={sheetSubtitle}
           teamsById={teamsById}
-          title={mobileSheetTitle}
+          title={sheetTitle}
         />
       ) : null}
 
