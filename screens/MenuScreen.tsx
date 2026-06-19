@@ -1,16 +1,25 @@
 import { useState } from "react";
 
-import type { PresetSummaryResponse } from "@/types/game";
+import type { MemberRole, PresetSummaryResponse } from "@/types/game";
 import { ContinueGamePage } from "./menu/ContinueGamePage";
 import { HomePage } from "./menu/HomePage";
+import { JoinGamePage } from "./menu/JoinGamePage";
 import { ManualGameFormPage } from "./menu/ManualGameFormPage";
 import { PresetFormPage } from "./menu/PresetFormPage";
 import { PresetsPage } from "./menu/PresetsPage";
 import { SettingsPage } from "./menu/SettingsPage";
 
-type MenuMode = "home" | "continue" | "manualForm" | "presets" | "presetForm" | "settings";
+type MenuMode = "home" | "continue" | "join" | "manualForm" | "presets" | "presetForm" | "settings";
 
-export function MenuScreen({ onOpenGame }: { onOpenGame: (gameId: string) => void }) {
+export function MenuScreen({
+  onAuthError,
+  onLogOut,
+  onOpenGame,
+}: {
+  onAuthError: () => void;
+  onLogOut: () => void;
+  onOpenGame: (gameId: string, teamId?: string, role?: MemberRole) => void;
+}) {
   const [mode, setMode] = useState<MenuMode>("home");
   const [selectedPreset, setSelectedPreset] = useState<PresetSummaryResponse | null>(null);
 
@@ -20,6 +29,8 @@ export function MenuScreen({ onOpenGame }: { onOpenGame: (gameId: string) => voi
         onContinueGame={() => setMode("continue")}
         onCreateManually={() => setMode("manualForm")}
         onCreateFromPreset={() => setMode("presets")}
+        onJoinGame={() => setMode("join")}
+        onLogOut={onLogOut}
         onSettings={() => setMode("settings")}
       />
     );
@@ -29,7 +40,7 @@ export function MenuScreen({ onOpenGame }: { onOpenGame: (gameId: string) => voi
     return (
       <ManualGameFormPage
         onBack={() => setMode("home")}
-        onGameCreated={onOpenGame}
+        onGameCreated={(gameId) => onOpenGame(gameId, undefined, "HOST")}
       />
     );
   }
@@ -37,6 +48,16 @@ export function MenuScreen({ onOpenGame }: { onOpenGame: (gameId: string) => voi
   if (mode === "continue") {
     return (
       <ContinueGamePage
+        onAuthError={onAuthError}
+        onBack={() => setMode("home")}
+        onOpenGame={onOpenGame}
+      />
+    );
+  }
+
+  if (mode === "join") {
+    return (
+      <JoinGamePage
         onBack={() => setMode("home")}
         onOpenGame={onOpenGame}
       />
@@ -59,7 +80,7 @@ export function MenuScreen({ onOpenGame }: { onOpenGame: (gameId: string) => voi
     return (
       <PresetFormPage
         onBack={() => setMode("presets")}
-        onGameCreated={onOpenGame}
+        onGameCreated={(gameId) => onOpenGame(gameId, undefined, "HOST")}
         preset={selectedPreset}
       />
     );

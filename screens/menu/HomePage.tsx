@@ -9,17 +9,22 @@ export function HomePage({
   onContinueGame,
   onCreateManually,
   onCreateFromPreset,
+  onJoinGame,
+  onLogOut,
   onSettings,
 }: {
   onContinueGame: () => void;
   onCreateManually: () => void;
   onCreateFromPreset: () => void;
+  onJoinGame: () => void;
+  onLogOut: () => void;
   onSettings: () => void;
 }) {
   return (
     <PageLayout title="Menu">
       <View style={styles.screenStack}>
-        <MenuButton icon="play-arrow" label="Continue game" onPress={onContinueGame} />
+        <MenuButton icon="list" label="My games" onPress={onContinueGame} />
+        <MenuButton icon="group-add" label="Join game" onPress={onJoinGame} />
         <View style={styles.panel}>
           <Text style={styles.panelTitle}>Create game</Text>
           <View style={styles.menuButtonStack}>
@@ -28,6 +33,7 @@ export function HomePage({
           </View>
         </View>
         <MenuButton icon="settings" label="Settings" onPress={onSettings} />
+        <MenuButton icon="logout" label="Log out" onPress={onLogOut} />
       </View>
     </PageLayout>
   );

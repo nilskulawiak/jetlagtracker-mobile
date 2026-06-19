@@ -61,7 +61,7 @@ export function PresetFormPage({
       .map((team) => ({
         color: team.color,
         name: team.name.trim(),
-        startingChips: team.startingChips.trim() ? Number(team.startingChips) : null,
+        startingChips: team.startingChips.trim() ? Number(team.startingChips) : 1,
       }))
       .filter((team) => team.name.length > 0);
 
@@ -75,11 +75,12 @@ export function PresetFormPage({
       return;
     }
 
-    if (validTeams.some((team) => team.startingChips !== null && !Number.isFinite(team.startingChips))) {
-      Alert.alert("Starting chips", "Starting chips must be a number.");
+    if (validTeams.some((team) => !Number.isFinite(team.startingChips) || team.startingChips < 1)) {
+      Alert.alert("Starting chips", "Each team must start with at least 1 chip.");
       return;
     }
 
+    let createdGameId: string | null = null;
     try {
       setIsCreating(true);
       setError(null);
@@ -88,12 +89,15 @@ export function PresetFormPage({
         presetId: preset.id,
         teams: validTeams,
       });
-      onGameCreated(game.id);
+      createdGameId = game.id;
     } catch (nextError) {
       console.error(nextError);
       setError("Could not create the game from this preset.");
     } finally {
       setIsCreating(false);
+    }
+    if (createdGameId) {
+      onGameCreated(createdGameId);
     }
   };
 
@@ -169,7 +173,7 @@ export function PresetFormPage({
                   inputMode="numeric"
                   keyboardType="number-pad"
                   onChangeText={(startingChips) => updateTeam(team.id, { startingChips })}
-                  placeholder="Leave empty for none"
+                  placeholder="Default: 1"
                   placeholderTextColor="#8a94a6"
                   style={styles.menuInput}
                   value={team.startingChips}

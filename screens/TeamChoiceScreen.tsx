@@ -2,84 +2,88 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 
-import { getGameState } from "@/api/gameApi";
+import { getGameState, setMyTeam } from "@/api/gameApi";
 import { PageLayout } from "@/components/Shared/PageLayout";
 import { styles } from "@/components/Shared/styles";
-import type { GameState, TeamResponse } from "@/types/game";
 import { colors } from "@/utils/colors";
+import type { TeamResponse } from "@/types/game";
 
 export function TeamChoiceScreen({
   gameId,
-  onBackToMenu,
-  onSelectTeam,
+  onBack,
+  onTeamChosen,
 }: {
   gameId: string;
-  onBackToMenu: () => void;
-  onSelectTeam: (teamId: string) => void;
+  onBack: () => void;
+  onTeamChosen: (teamId: string) => void;
 }) {
-  const [gameState, setGameState] = useState<GameState | null>(null);
+  const [teams, setTeams] = useState<TeamResponse[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isChoosing, setIsChoosing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
-  const loadGame = useCallback(async () => {
+  const loadTeams = useCallback(async () => {
     try {
       setError(null);
       setIsLoading(true);
-      const nextGameState = await getGameState(gameId);
-      setGameState({
-        ...nextGameState,
-        teams: nextGameState.teams ?? [],
-      });
-    } catch (nextError) {
-      console.error(nextError);
-      setError("Could not load teams for this game. Check the backend URL.");
+      const state = await getGameState(gameId);
+      setTeams(state.teams);
+    } catch {
+      setError("Could not load teams. Check the backend URL.");
     } finally {
       setIsLoading(false);
     }
   }, [gameId]);
 
   useEffect(() => {
-    void loadGame();
-  }, [loadGame]);
+    void loadTeams();
+  }, [loadTeams]);
 
-  const teams = gameState?.teams ?? [];
+  const chooseTeam = async (teamId: string) => {
+    try {
+      setError(null);
+      setIsChoosing(true);
+      await setMyTeam(gameId, teamId);
+      onTeamChosen(teamId);
+    } catch {
+      setError("Could not save team choice. Try again.");
+      setIsChoosing(false);
+    }
+  };
 
   return (
-    <PageLayout onBack={onBackToMenu} onRefresh={loadGame} refreshing={isLoading} title="Choose your team">
+    <PageLayout onBack={onBack} onRefresh={loadTeams} refreshing={isLoading} title="Choose your team">
       {error ? <Text style={styles.inlineError}>{error}</Text> : null}
-
-      {isLoading && !gameState ? (
+      {isLoading && teams.length === 0 ? (
         <View style={styles.centerState}>
           <ActivityIndicator color={colors.info} />
           <Text style={styles.centerText}>Loading teams...</Text>
         </View>
       ) : (
         <View style={styles.screenStack}>
-          <View style={styles.panel}>
-            <Text style={styles.formLabel}>Game</Text>
-            <Text style={styles.panelTitle}>{gameState?.game.name ?? "Game"}</Text>
-            <Text style={styles.emptyText}>Pick the team you are playing as for this session.</Text>
-          </View>
-
-          {teams.length === 0 ? <Text style={styles.emptyText}>This game does not have any teams yet.</Text> : null}
           {teams.map((team) => (
-            <TeamChoiceOption key={team.id} team={team} onPress={() => onSelectTeam(team.id)} />
+            <Pressable
+              disabled={isChoosing}
+              key={team.id}
+              onPress={() => { void chooseTeam(team.id); }}
+              style={[styles.teamCard, isChoosing && styles.disabledButton]}
+            >
+              <View style={[styles.teamColorBar, { backgroundColor: team.color }]} />
+              <View style={styles.teamCardBody}>
+                <Text style={styles.actionType}>{team.name}</Text>
+                <Text style={styles.emptyText}>{team.availableChips} chips</Text>
+              </View>
+              <View style={{ justifyContent: "center", paddingRight: 14 }}>
+                {isChoosing ? (
+                  <ActivityIndicator color={colors.info} size="small" />
+                ) : (
+                  <MaterialIcons color={colors.info} name="chevron-right" size={24} />
+                )}
+              </View>
+            </Pressable>
           ))}
         </View>
       )}
     </PageLayout>
-  );
-}
-
-function TeamChoiceOption({ onPress, team }: { onPress: () => void; team: TeamResponse }) {
-  return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={styles.menuListItem}>
-      <View style={[styles.teamOptionDot, { backgroundColor: team.color }]} />
-      <View style={styles.actionBody}>
-        <Text style={styles.teamName}>{team.name}</Text>
-        <Text style={styles.emptyText}>{team.availableChips} chips available</Text>
-      </View>
-      <MaterialIcons color={colors.info} name="chevron-right" size={24} />
-    </Pressable>
   );
 }

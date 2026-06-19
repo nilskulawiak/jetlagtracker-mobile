@@ -58,7 +58,7 @@ export function ManualGameFormPage({
       .map((t) => ({
         color: t.color,
         name: t.name.trim(),
-        startingChips: t.startingChips.trim() ? Number(t.startingChips) : null,
+        startingChips: t.startingChips.trim() ? Number(t.startingChips) : 1,
       }))
       .filter((t) => t.name.length > 0);
 
@@ -77,11 +77,12 @@ export function ManualGameFormPage({
       return;
     }
 
-    if (validTeams.some((t) => t.startingChips !== null && !Number.isFinite(t.startingChips))) {
-      Alert.alert("Starting chips", "Starting chips must be a number.");
+    if (validTeams.some((t) => !Number.isFinite(t.startingChips) || t.startingChips < 1)) {
+      Alert.alert("Starting chips", "Each team must start with at least 1 chip.");
       return;
     }
 
+    let createdGameId: string | null = null;
     try {
       setIsCreating(true);
       setError(null);
@@ -92,12 +93,15 @@ export function ManualGameFormPage({
         name: trimmedName,
       });
       await Promise.all(validTeams.map((t) => createTeam(game.id, t)));
-      onGameCreated(game.id);
+      createdGameId = game.id;
     } catch (nextError) {
       console.error(nextError);
       setError("Could not create the game.");
     } finally {
       setIsCreating(false);
+    }
+    if (createdGameId) {
+      onGameCreated(createdGameId);
     }
   };
 
@@ -193,7 +197,7 @@ export function ManualGameFormPage({
                   inputMode="numeric"
                   keyboardType="number-pad"
                   onChangeText={(startingChips) => updateTeam(team.id, { startingChips })}
-                  placeholder="Leave empty for none"
+                  placeholder="Default: 1"
                   placeholderTextColor="#8a94a6"
                   style={styles.menuInput}
                   value={team.startingChips}
