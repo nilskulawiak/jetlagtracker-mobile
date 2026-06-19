@@ -1,3 +1,35 @@
+export type MemberRole = "HOST" | "PLAYER";
+
+export interface UserResponse {
+  id: string;
+  email: string;
+  displayName: string;
+}
+
+export interface AuthResponse {
+  sessionToken: string;
+  user: UserResponse;
+}
+
+export interface GameMembershipResponse {
+  gameId: string;
+  role: MemberRole;
+  teamId?: string;
+  teamName?: string;
+  game: GameResponse;
+}
+
+export interface GameInviteResponse {
+  inviteCode: string;
+}
+
+export interface JoinGameResponse {
+  gameId: string;
+  role: MemberRole;
+  teamId?: string;
+  game: GameState;
+}
+
 export type GameStatus = "CREATED" | "STARTED" | "DONE";
 
 export type ChallengeStatus = "CREATED" | "AVAILABLE" | "DONE";

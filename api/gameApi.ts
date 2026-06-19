@@ -1,15 +1,20 @@
 import Constants from "expo-constants";
 
+import { getSession } from "@/utils/sessionStorage";
 import type {
+  AuthResponse,
   CreateGameFromPresetRequest,
   CreateGameRequest,
   CreateChallengeRequest,
   CreateStationRequest,
   CreateTeamRequest,
   FinishChallengeRequest,
+  GameInviteResponse,
+  GameMembershipResponse,
   GameResponse,
   GamesResponse,
   GameState,
+  JoinGameResponse,
   PatchChallengeRequest,
   PatchStationRequest,
   PatchTeamRequest,
@@ -18,6 +23,7 @@ import type {
   StartChallengeRequest,
   StartGameRequest,
   StationChipStateResponse,
+  UserResponse,
 } from "@/types/game";
 
 function getLanBaseUrl() {
@@ -52,6 +58,11 @@ export class ApiError extends Error {
 
 const REQUEST_TIMEOUT_MS = 10_000;
 
+async function getAuthHeaders(): Promise<HeadersInit> {
+  const session = await getSession();
+  return session ? { Authorization: `Bearer ${session.sessionToken}` } : {};
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const controller = new AbortController();
   let timedOut = false;
@@ -71,11 +82,14 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     }
   }
 
+  const authHeaders = await getAuthHeaders();
+
   try {
     const response = await fetch(`${getApiBaseUrl()}${path}`, {
       ...init,
       headers: {
         "Content-Type": "application/json",
+        ...authHeaders,
         ...init?.headers,
       },
       signal: controller.signal,
@@ -263,5 +277,49 @@ export function revertChallengeToCreated(gameId: string, challengeId: string) {
 export function deleteChallengeAttempt(gameId: string, challengeId: string, teamId: string) {
   return request<void>(`/games/${gameId}/challenges/${challengeId}/attempts/${teamId}`, {
     method: "DELETE",
+  });
+}
+
+export function register(email: string, displayName: string, password: string) {
+  return request<AuthResponse>("/auth/register", {
+    method: "POST",
+    body: JSON.stringify({ email, displayName, password }),
+  });
+}
+
+export function login(email: string, password: string) {
+  return request<AuthResponse>("/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export function logout() {
+  return request<void>("/auth/logout", { method: "POST" });
+}
+
+export function getMe() {
+  return request<UserResponse>("/auth/me");
+}
+
+export function getMyGames() {
+  return request<GameMembershipResponse[]>("/games/mine");
+}
+
+export function generateInvite(gameId: string) {
+  return request<GameInviteResponse>(`/games/${gameId}/invites`, { method: "POST" });
+}
+
+export function joinGame(inviteCode: string) {
+  return request<JoinGameResponse>("/games/join", {
+    method: "POST",
+    body: JSON.stringify({ inviteCode }),
+  });
+}
+
+export function setMyTeam(gameId: string, teamId: string) {
+  return request<void>(`/games/${gameId}/my-team`, {
+    method: "PATCH",
+    body: JSON.stringify({ teamId }),
   });
 }
