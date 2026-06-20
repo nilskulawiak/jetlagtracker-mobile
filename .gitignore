@@ -32,6 +32,14 @@ yarn-error.*
 
 # Claude Code
 .claude/
+CLAUDE.md
+AGENTS.md
+
+# Editor
+.vscode/
+
+# Linting
+eslint.config.js
 
 # local env files
 .env
