@@ -13,10 +13,10 @@ export const AVAILABLE_MAPS: MapDefinition[] = [
 ];
 
 const mapImages: Record<string, ImageSourcePropType> = {
-  taiwan: require("@/assets/images/taiwan.png"),
-  "taiwan.png": require("@/assets/images/taiwan.png"),
-  frankfurt: require("@/assets/images/frankfurt.png"),
-  "frankfurt.png": require("@/assets/images/frankfurt.png"),
+  taiwan: require("@/assets/maps/taiwan.png"),
+  "taiwan.png": require("@/assets/maps/taiwan.png"),
+  frankfurt: require("@/assets/maps/frankfurt.png"),
+  "frankfurt.png": require("@/assets/maps/frankfurt.png"),
 };
 
 export function resolveMapImage(mapImage: string): ImageSourcePropType {
