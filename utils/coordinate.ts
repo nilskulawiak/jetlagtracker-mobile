@@ -1,5 +1,5 @@
 export const MIN_MAP_ZOOM = 1;
-export const MAX_MAP_ZOOM = 8;
+export const MAX_MAP_ZOOM = 12;
 
 export function scaleCoordinate(value: number, sourceMax: number, renderedMax: number) {
   if (

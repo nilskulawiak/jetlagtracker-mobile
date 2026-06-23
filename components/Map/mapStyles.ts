@@ -289,11 +289,11 @@ export const mapStyles = StyleSheet.create({
   },
   stationMarker: {
     borderColor: colors.panel,
-    borderRadius: 8,
+    borderRadius: 6,
     borderWidth: 2,
-    height: 16,
+    height: 12,
     boxShadow: "0 2px 4px rgba(0, 0, 0, 0.22)",
-    width: 16,
+    width: 12,
   },
   teamSummaryList: {
     gap: 8,
